@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -211,6 +212,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="nav">
         <a href="index.html">← PRISM</a>
@@ -234,7 +236,6 @@
                     <option value="linear">Linear</option>
                     <option value="radial">Radial</option>
                     <option value="conic">Conic</option>
-                    <option value="animated">Animated</option>
                 </select>
             </div>
 
@@ -255,12 +256,12 @@
         </div>
     </div>
 
+    <script src="../granim.min.js"></script>
     <script>
-        const canvas = document.getElementById('gradientCanvas');
-        const ctx = canvas.getContext('2d');
+        let granimInstance;
         let gradientType = 'linear';
         let angle = 90;
-        let animationTime = 0;
+        let currentDirection = 'diagonal';
 
         let colorStops = [
             { color: '#ff0080', position: 0 },
@@ -273,60 +274,55 @@
             { name: 'Ocean', stops: [{ color: '#0575e6', position: 0 }, { color: '#00f260', position: 1 }] },
             { name: 'Fire', stops: [{ color: '#ff0000', position: 0 }, { color: '#ff7f00', position: 0.5 }, { color: '#ffff00', position: 1 }] },
             { name: 'Purple Haze', stops: [{ color: '#8e2de2', position: 0 }, { color: '#4a00e0', position: 1 }] },
-            { name: 'Rainbow', stops: [
-                { color: '#ff0000', position: 0 },
-                { color: '#ff7f00', position: 0.2 },
-                { color: '#ffff00', position: 0.4 },
-                { color: '#00ff00', position: 0.6 },
-                { color: '#0000ff', position: 0.8 },
-                { color: '#8b00ff', position: 1 }
-            ]},
+            {
+                name: 'Rainbow', stops: [
+                    { color: '#ff0000', position: 0 },
+                    { color: '#ff7f00', position: 0.2 },
+                    { color: '#ffff00', position: 0.4 },
+                    { color: '#00ff00', position: 0.6 },
+                    { color: '#0000ff', position: 0.8 },
+                    { color: '#8b00ff', position: 1 }
+                ]
+            },
             { name: 'Emerald', stops: [{ color: '#11998e', position: 0 }, { color: '#38ef7d', position: 1 }] }
         ];
 
-        function resize() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            drawGradient();
-        }
-
-        resize();
-        window.addEventListener('resize', resize);
-
-        function drawGradient() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            let gradient;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            if (gradientType === 'linear') {
-                const rad = (angle - 90) * Math.PI / 180;
-                const x1 = centerX - Math.cos(rad) * canvas.width / 2;
-                const y1 = centerY - Math.sin(rad) * canvas.height / 2;
-                const x2 = centerX + Math.cos(rad) * canvas.width / 2;
-                const y2 = centerY + Math.sin(rad) * canvas.height / 2;
-                gradient = ctx.createLinearGradient(x1, y1, x2, y2);
-            } else if (gradientType === 'radial') {
-                gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(canvas.width, canvas.height) / 2);
-            } else if (gradientType === 'conic') {
-                gradient = ctx.createConicGradient((angle * Math.PI / 180), centerX, centerY);
-            } else if (gradientType === 'animated') {
-                const offset = (Math.sin(animationTime) + 1) / 2;
-                const rad = (angle - 90) * Math.PI / 180;
-                const x1 = centerX - Math.cos(rad) * canvas.width / 2;
-                const y1 = centerY - Math.sin(rad) * canvas.height / 2;
-                const x2 = centerX + Math.cos(rad) * canvas.width / 2;
-                const y2 = centerY + Math.sin(rad) * canvas.height / 2;
-                gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+        function initGranim() {
+            if (granimInstance) {
+                granimInstance.destroy();
             }
 
-            colorStops.forEach(stop => {
-                gradient.addColorStop(stop.position, stop.color);
-            });
+            // Map gradient types to Granim directions
+            let direction = currentDirection;
+            if (gradientType === 'radial') {
+                direction = 'radial';
+            } else if (angle === 0) {
+                direction = 'top-bottom';
+            } else if (angle === 90) {
+                direction = 'left-right';
+            } else {
+                direction = 'diagonal';
+            }
 
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            granimInstance = new Granim({
+                element: '#gradientCanvas',
+                direction: direction,
+                isPausedWhenNotInView: false,
+                states: {
+                    "default-state": {
+                        gradients: [colorStops.map(stop => ({
+                            color: stop.color,
+                            pos: stop.position
+                        }))],
+                        transitionSpeed: 10000,
+                        loop: false
+                    }
+                }
+            });
+        }
+
+        function updateGradient() {
+            initGranim();
         }
 
         function renderColorStops() {
@@ -349,7 +345,7 @@
             document.querySelectorAll('input[type="color"]').forEach(input => {
                 input.addEventListener('input', (e) => {
                     colorStops[e.target.dataset.index].color = e.target.value;
-                    drawGradient();
+                    updateGradient();
                 });
             });
 
@@ -357,7 +353,7 @@
                 input.addEventListener('input', (e) => {
                     colorStops[e.target.dataset.index].position = e.target.value / 100;
                     e.target.nextElementSibling.textContent = `Position: ${e.target.value}%`;
-                    drawGradient();
+                    updateGradient();
                 });
             });
         }
@@ -384,7 +380,7 @@
                 div.addEventListener('click', () => {
                     colorStops = JSON.parse(JSON.stringify(preset.stops));
                     renderColorStops();
-                    drawGradient();
+                    updateGradient();
                 });
                 container.appendChild(div);
             });
@@ -392,35 +388,37 @@
 
         document.getElementById('gradientType').addEventListener('change', (e) => {
             gradientType = e.target.value;
-            if (gradientType === 'animated') {
-                animate();
-            }
-            drawGradient();
+            updateGradient();
         });
 
         document.getElementById('angle').addEventListener('input', (e) => {
             angle = parseInt(e.target.value);
             document.getElementById('angleVal').textContent = angle + '°';
-            drawGradient();
+
+            // Update direction based on angle
+            if (angle === 0) {
+                currentDirection = 'top-bottom';
+            } else if (angle === 90) {
+                currentDirection = 'left-right';
+            } else if (angle === 180) {
+                currentDirection = 'top-bottom';
+            } else {
+                currentDirection = 'diagonal';
+            }
+
+            updateGradient();
         });
 
         document.getElementById('addStop').addEventListener('click', () => {
             colorStops.push({ color: '#ffffff', position: 0.5 });
             renderColorStops();
-            drawGradient();
+            updateGradient();
         });
-
-        function animate() {
-            if (gradientType === 'animated') {
-                animationTime += 0.02;
-                drawGradient();
-                requestAnimationFrame(animate);
-            }
-        }
 
         renderColorStops();
         renderPresets();
-        drawGradient();
+        initGranim();
     </script>
 </body>
+
 </html>

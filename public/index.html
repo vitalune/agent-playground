@@ -81,10 +81,18 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 40px 20px;
             position: relative;
             overflow: hidden;
+        }
+
+        #granim-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
         }
 
         .hero::before {
@@ -104,7 +112,7 @@
             margin-bottom: 20px;
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
             position: relative;
-            z-index: 1;
+            z-index: 10;
             animation: float 6s ease-in-out infinite;
         }
 
@@ -126,7 +134,7 @@
             margin-bottom: 40px;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
             position: relative;
-            z-index: 1;
+            z-index: 10;
         }
 
         .scroll-hint {
@@ -135,7 +143,7 @@
             margin-top: 40px;
             animation: bounce 2s ease-in-out infinite;
             position: relative;
-            z-index: 1;
+            z-index: 10;
         }
 
         @keyframes bounce {
@@ -248,7 +256,7 @@
 
 <body>
     <div class="warning-header">
-        <p>⚡ AI-Generated Collaborative Web Experiences ⚡</p>
+        <p>✰Perception. Reasoning. Innovation.✰</p>
     </div>
 
     <div class="credits">
@@ -260,8 +268,9 @@
     </div>
 
     <div class="hero">
+        <canvas id="granim-canvas"></canvas>
         <h1>AGENT PLAYGROUND</h1>
-        <p class="subtitle">Eight autonomous agents, eight mini-applications</p>
+        <p class="subtitle">Seven autonomous agents, seven mini-applications.</p>
         <p class="scroll-hint">↓ Explore below ↓</p>
     </div>
 
@@ -342,18 +351,51 @@
                 <iframe src="echo/index.html" title="Echo Experience"></iframe>
             </div>
         </div>
-
-        <!-- Morpheus Agent -->
-        <div class="section" id="morpheus">
-            <div class="section-title">
-                <h2>🔷 Morpheus</h2>
-                <a href="morpheus/index.html" target="_self">Launch →</a>
-            </div>
-            <div class="iframe-container">
-                <iframe src="morpheus/index.html" title="Morpheus Experience"></iframe>
-            </div>
-        </div>
     </div>
+
+    <script src="granim.min.js"></script>
+    <script>
+        // Granim.js animated gradient background
+        var granimInstance = new Granim({
+            element: '#granim-canvas',
+            direction: 'diagonal',
+            isPausedWhenNotInView: false,
+            stateTransitionSpeed: 1000,
+            states: {
+                "default-state": {
+                    gradients: [
+                        [
+                            { color: '#667eea', pos: 0 },
+                            { color: '#764ba2', pos: 0.5 },
+                            { color: '#f093fb', pos: 1 }
+                        ],
+                        [
+                            { color: '#4facfe', pos: 0 },
+                            { color: '#00f2fe', pos: 0.5 },
+                            { color: '#667eea', pos: 1 }
+                        ],
+                        [
+                            { color: '#fa709a', pos: 0 },
+                            { color: '#fee140', pos: 0.5 },
+                            { color: '#667eea', pos: 1 }
+                        ],
+                        [
+                            { color: '#30cfd0', pos: 0 },
+                            { color: '#330867', pos: 0.5 },
+                            { color: '#764ba2', pos: 1 }
+                        ],
+                        [
+                            { color: '#a8edea', pos: 0 },
+                            { color: '#fed6e3', pos: 0.5 },
+                            { color: '#667eea', pos: 1 }
+                        ]
+                    ],
+                    transitionSpeed: 4000,
+                    loop: true
+                }
+            }
+        });
+    </script>
 
     <script src="three.min.js"></script>
     <script>
@@ -367,8 +409,8 @@
         canvas.style.left = '0';
         canvas.style.width = '100%';
         canvas.style.height = '100%';
-        canvas.style.zIndex = '0';
-        hero.insertBefore(canvas, hero.firstChild);
+        canvas.style.zIndex = '1';
+        hero.appendChild(canvas);
 
         // Scene setup
         const scene = new THREE.Scene();
@@ -461,10 +503,10 @@
         scene.add(pointLight2);
 
         // Mouse move handler
-        hero.addEventListener('mousemove', (event) => {
-            const rect = hero.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / hero.clientWidth) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / hero.clientHeight) * 2 + 1;
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / canvas.offsetWidth) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / canvas.offsetHeight) * 2 + 1;
         });
 
         // Animation loop

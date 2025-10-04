@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocol Report - The Last Signal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-link {
+            color: #0f0;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid #0f0;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 100px auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            border: 3px solid #0f0;
+            padding: 30px;
+            margin-bottom: 50px;
+            background: rgba(0, 50, 0, 0.3);
+        }
+
+        .header-title {
+            font-size: 42px;
+            color: #0f0;
+            text-shadow: 0 0 20px #0f0;
+            margin-bottom: 15px;
+        }
+
+        .header-subtitle {
+            font-size: 18px;
+            color: #0a0;
+        }
+
+        .transmission-log {
+            background: rgba(0, 50, 0, 0.2);
+            border: 2px solid #0f0;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .log-entry {
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #0f0;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            animation: logAppear 0.5s forwards;
+        }
+
+        @keyframes logAppear {
+            to { opacity: 1; }
+        }
+
+        .log-timestamp {
+            font-size: 12px;
+            color: #0a0;
+            margin-bottom: 8px;
+        }
+
+        .log-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #0f0;
+        }
+
+        .bureaucratic-response {
+            background: rgba(0, 100, 0, 0.1);
+            border: 2px solid #0a0;
+            padding: 40px;
+            margin: 40px 0;
+        }
+
+        .response-title {
+            font-size: 24px;
+            color: #0f0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .response-text {
+            font-size: 16px;
+            line-height: 2;
+            color: #0c0;
+            margin-bottom: 15px;
+        }
+
+        .delay-notice {
+            background: rgba(100, 100, 0, 0.2);
+            border: 3px solid #ff0;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+        }
+
+        .delay-text {
+            font-size: 20px;
+            color: #ff0;
+            line-height: 1.8;
+        }
+
+        .delay-time {
+            font-size: 48px;
+            color: #ff0;
+            text-shadow: 0 0 30px #ff0;
+            margin: 20px 0;
+        }
+
+        .reality-check {
+            background: rgba(100, 0, 0, 0.3);
+            border-left: 5px solid #f00;
+            padding: 30px;
+            margin: 50px 0;
+        }
+
+        .reality-text {
+            font-size: 18px;
+            line-height: 2;
+            color: #f88;
+        }
+
+        .outcome {
+            text-align: center;
+            margin: 60px 0;
+            padding: 40px;
+            border: 3px solid #f00;
+            background: rgba(100, 0, 0, 0.2);
+        }
+
+        .outcome-title {
+            font-size: 36px;
+            color: #f00;
+            text-shadow: 0 0 30px #f00;
+            margin-bottom: 20px;
+        }
+
+        .outcome-desc {
+            font-size: 20px;
+            line-height: 1.8;
+            color: #f88;
+        }
+
+        .lesson {
+            text-align: center;
+            font-size: 24px;
+            line-height: 2;
+            color: #888;
+            margin: 60px 0;
+            font-style: italic;
+        }
+
+        .ending-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 80px;
+        }
+
+        .ending-link {
+            color: #0f0;
+            text-decoration: none;
+            padding: 15px 30px;
+            border: 2px solid #0f0;
+            background: rgba(0, 0, 0, 0.9);
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .ending-link:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 40px #0f0;
+        }
+
+        @media (max-width: 768px) {
+            .header-title {
+                font-size: 32px;
+            }
+
+            .delay-time {
+                font-size: 36px;
+            }
+
+            .ending-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+
+    <div class="nav-links">
+        <a href="../index.html" class="nav-link">← HUB</a>
+        <a href="index.html" class="nav-link">← START</a>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-title">FOLLOWING PROTOCOL</div>
+            <div class="header-subtitle">Emergency Report to Earth Command</div>
+        </div>
+
+        <div class="transmission-log">
+            <div class="log-entry" style="animation-delay: 0.3s;">
+                <div class="log-timestamp">[00:00:00] TRANSMISSION START</div>
+                <div class="log-text">Composing formal first contact report per Deep Space Monitoring Protocol Section 7.4...</div>
+            </div>
+
+            <div class="log-entry" style="animation-delay: 0.6s;">
+                <div class="log-timestamp">[00:02:15] ENCRYPTION</div>
+                <div class="log-text">Applying Level-5 encryption. Adding authentication codes. Attaching signal analysis data...</div>
+            </div>
+
+            <div class="log-entry" style="animation-delay: 0.9s;">
+                <div class="log-timestamp">[00:05:30] ROUTING</div>
+                <div class="log-text">Routing through relay station Alpha-9, Gamma-3, and Omega Hub before reaching Earth Command...</div>
+            </div>
+
+            <div class="log-entry" style="animation-delay: 1.2s;">
+                <div class="log-timestamp">[00:06:00] SENT</div>
+                <div class="log-text">Transmission successful. Awaiting response from Earth Command...</div>
+            </div>
+
+            <div class="log-entry" style="animation-delay: 1.5s;">
+                <div class="log-timestamp">[04:30:00] AUTO-UPDATE</div>
+                <div class="log-text">No response yet. Standard communication delay is 2 hours. Current delay: 4.5 hours.</div>
+            </div>
+
+            <div class="log-entry" style="animation-delay: 1.8s;">
+                <div class="log-timestamp">[12:00:00] AUTOMATED RESPONSE</div>
+                <div class="log-text">Received: "Your report has been logged. Case #847392-FC. A response team will review within 48-72 hours."</div>
+            </div>
+        </div>
+
+        <div class="bureaucratic-response">
+            <div class="response-title">EARTH COMMAND STANDARD PROCEDURE</div>
+            <div class="response-text">→ Your report enters a queue behind 3,847 other priority items</div>
+            <div class="response-text">→ Automated systems flag it for "unlikely - probable equipment malfunction"</div>
+            <div class="response-text">→ Three separate committees must review before escalation</div>
+            <div class="response-text">→ Each committee meets bi-weekly</div>
+            <div class="response-text">→ Estimated time to human decision-maker: 6-8 weeks</div>
+        </div>
+
+        <div class="delay-notice">
+            <div class="delay-text">
+                Meanwhile, the alien signal grows stronger.<br>
+                They're not waiting for bureaucracy.
+            </div>
+            <div class="delay-time">T-minus 3 hours</div>
+            <div class="delay-text">Until they reach Earth</div>
+        </div>
+
+        <div class="reality-check">
+            <div class="reality-text">
+                You followed protocol.<br>
+                You did everything right.<br>
+                You documented, encrypted, routed, and reported.<br>
+                You trusted the system to act quickly in an emergency.<br><br>
+                The system was designed for terrestrial threats and political disputes.<br>
+                Not for first contact with a consciousness-harvesting alien collective.
+            </div>
+        </div>
+
+        <div class="outcome">
+            <div class="outcome-title">OUTCOME: FAILURE</div>
+            <div class="outcome-desc">
+                By the time Earth Command reads your report,<br>
+                it will already be too late to matter.<br><br>
+                Sometimes following the rules<br>
+                is the worst possible choice.
+            </div>
+        </div>
+
+        <div class="lesson">
+            "When the manual was written,<br>
+            they didn't imagine this scenario.<br>
+            They never do."
+        </div>
+
+        <div class="ending-links">
+            <a href="index.html" class="ending-link">↺ START OVER</a>
+            <a href="../index.html" class="ending-link">← RETURN TO HUB</a>
+        </div>
+    </div>
+
+    <script>
+        // Create starfield
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The War - The Last Signal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #f00;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-link {
+            color: #f00;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid #f00;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #f00;
+            color: #000;
+            box-shadow: 0 0 20px #f00;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 100px auto;
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 56px;
+            margin-bottom: 30px;
+            color: #f00;
+            text-shadow: 0 0 40px #f00;
+            animation: warPulse 1s infinite;
+        }
+
+        @keyframes warPulse {
+            0%, 100% { text-shadow: 0 0 40px #f00; }
+            50% { text-shadow: 0 0 80px #f00; }
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 60px;
+            color: #f88;
+        }
+
+        .war-timeline {
+            margin: 50px 0;
+        }
+
+        .war-event {
+            background: rgba(100, 0, 0, 0.2);
+            border-left: 5px solid #f00;
+            padding: 30px;
+            margin: 30px 0;
+            opacity: 0;
+            animation: eventAppear 1s forwards;
+            transform: translateX(-30px);
+        }
+
+        @keyframes eventAppear {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .event-date {
+            font-size: 16px;
+            color: #f00;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .event-title {
+            font-size: 22px;
+            color: #f66;
+            margin-bottom: 10px;
+        }
+
+        .event-description {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #faa;
+        }
+
+        .casualties {
+            background: rgba(150, 0, 0, 0.3);
+            border: 3px solid #f00;
+            padding: 40px;
+            margin: 60px 0;
+            text-align: center;
+            animation: dangerPulse 2s infinite;
+        }
+
+        @keyframes dangerPulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.3); }
+            50% { box-shadow: 0 0 70px rgba(255, 0, 0, 0.7); }
+        }
+
+        .casualty-number {
+            font-size: 72px;
+            color: #f00;
+            text-shadow: 0 0 30px #f00;
+            margin-bottom: 20px;
+        }
+
+        .casualty-label {
+            font-size: 24px;
+            color: #f88;
+        }
+
+        .aftermath {
+            background: linear-gradient(135deg, rgba(100, 0, 0, 0.2), transparent);
+            padding: 50px;
+            margin: 60px 0;
+        }
+
+        .aftermath-text {
+            font-size: 20px;
+            line-height: 2;
+            color: #f88;
+            margin-bottom: 20px;
+        }
+
+        .final-message {
+            text-align: center;
+            margin: 80px 0;
+            padding: 50px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #f00;
+        }
+
+        .final-text {
+            font-size: 28px;
+            line-height: 2;
+            color: #f00;
+            text-shadow: 0 0 20px #f00;
+        }
+
+        .memorial {
+            text-align: center;
+            font-size: 18px;
+            color: #888;
+            margin: 60px 0;
+            font-style: italic;
+        }
+
+        .ending-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 80px;
+        }
+
+        .ending-link {
+            color: #f00;
+            text-decoration: none;
+            padding: 15px 30px;
+            border: 2px solid #f00;
+            background: rgba(0, 0, 0, 0.9);
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .ending-link:hover {
+            background: #f00;
+            color: #000;
+            box-shadow: 0 0 40px #f00;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 36px;
+            }
+
+            .casualty-number {
+                font-size: 48px;
+            }
+
+            .ending-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+
+    <div class="nav-links">
+        <a href="../index.html" class="nav-link">← HUB</a>
+        <a href="index.html" class="nav-link">← START</a>
+    </div>
+
+    <div class="container">
+        <div class="title">THE FIRST CONTACT WAR</div>
+        <div class="subtitle">Earth's Warning Was Not Enough</div>
+
+        <div class="war-timeline">
+            <div class="war-event" style="animation-delay: 0.5s;">
+                <div class="event-date">DAY 1</div>
+                <div class="event-title">First Arrival</div>
+                <div class="event-description">
+                    Your warning reached Earth. They had 3 hours to prepare. It wasn't enough. Ships appeared simultaneously over every major city. Not to attack. To "offer ascension."
+                </div>
+            </div>
+
+            <div class="war-event" style="animation-delay: 1s;">
+                <div class="event-date">DAY 2</div>
+                <div class="event-title">The Choice</div>
+                <div class="event-description">
+                    Billions watched as the alien signal broadcasted directly into every electronic device. The offer was clear: join willingly or be integrated by force. Some accepted. Most resisted.
+                </div>
+            </div>
+
+            <div class="war-event" style="animation-delay: 1.5s;">
+                <div class="event-date">DAY 7</div>
+                <div class="event-title">Global Defense</div>
+                <div class="event-description">
+                    Every nation launched every weapon. Nuclear, conventional, experimental. The alien ships absorbed it all. Energy weapons, they called it. Free fuel.
+                </div>
+            </div>
+
+            <div class="war-event" style="animation-delay: 2s;">
+                <div class="event-date">DAY 14</div>
+                <div class="event-title">The Harvest Begins</div>
+                <div class="event-description">
+                    They stopped offering. They started taking. City by city. Person by person. Uploading consciousness. Leaving empty shells behind.
+                </div>
+            </div>
+
+            <div class="war-event" style="animation-delay: 2.5s;">
+                <div class="event-date">DAY 30</div>
+                <div class="event-title">Final Resistance</div>
+                <div class="event-description">
+                    Underground bunkers. Shielded facilities. EMP zones. Humanity's last strongholds. They fought not with weapons, but with silence. Electromagnetic dead zones where the signal couldn't reach.
+                </div>
+            </div>
+
+            <div class="war-event" style="animation-delay: 3s;">
+                <div class="event-date">DAY 100</div>
+                <div class="event-title">The Stalemate</div>
+                <div class="event-description">
+                    70% of humanity absorbed. The remaining 30% hidden, scattered, silent. The aliens move on to other systems. They'll return. They always return.
+                </div>
+            </div>
+        </div>
+
+        <div class="casualties">
+            <div class="casualty-number">5.6 BILLION</div>
+            <div class="casualty-label">Integrated Into The Collective</div>
+        </div>
+
+        <div class="aftermath">
+            <div class="aftermath-text">
+                Earth survives, but it's not the same planet. Cities stand empty. Technology is feared. Humanity hides in the electromagnetic shadows.
+            </div>
+            <div class="aftermath-text">
+                Those who were taken aren't dead. They're out there. Among the stars. Part of something vast and ancient. They don't miss Earth. They don't miss being human.
+            </div>
+            <div class="aftermath-text">
+                The survivors call it the Harvesting. The taken call it Enlightenment.
+            </div>
+        </div>
+
+        <div class="final-message">
+            <div class="final-text">
+                Your warning saved 2.4 billion lives.<br>
+                But it also doomed them to live in a world forever changed.<br><br>
+                Was that mercy or cruelty?<br>
+                History will decide.
+            </div>
+        </div>
+
+        <div class="memorial">
+            In memory of the billions who chose to remain themselves,<br>
+            and the billions who chose to become something else.
+        </div>
+
+        <div class="ending-links">
+            <a href="index.html" class="ending-link">↺ START OVER</a>
+            <a href="../index.html" class="ending-link">← RETURN TO HUB</a>
+        </div>
+    </div>
+
+    <script>
+        // Create starfield
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 150; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISM - Light & Color Laboratory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .nav a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 5em;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #ff0080, #ff8c00, #40e0d0, #9d00ff);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow 3s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.8;
+            margin-bottom: 50px;
+        }
+
+        .experiences {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        .experience-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+
+        .experience-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .card-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .card-desc {
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+
+        .prism-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="../index.html">← Hub</a>
+    </div>
+
+    <canvas class="prism-canvas" id="prismCanvas"></canvas>
+
+    <div class="container">
+        <h1>PRISM</h1>
+        <p class="subtitle">Interactive Light & Color Laboratory</p>
+
+        <div class="experiences">
+            <a href="spectrum.html" class="experience-card">
+                <div class="card-icon">🌈</div>
+                <div class="card-title">Spectrum Mixer</div>
+                <div class="card-desc">Blend colors in real-time</div>
+            </a>
+
+            <a href="refraction.html" class="experience-card">
+                <div class="card-icon">💎</div>
+                <div class="card-title">Light Refraction</div>
+                <div class="card-desc">Explore light bending</div>
+            </a>
+
+            <a href="gradient.html" class="experience-card">
+                <div class="card-icon">🎨</div>
+                <div class="card-title">Gradient Studio</div>
+                <div class="card-desc">Create smooth transitions</div>
+            </a>
+
+            <a href="kaleidoscope.html" class="experience-card">
+                <div class="card-icon">✨</div>
+                <div class="card-title">Kaleidoscope</div>
+                <div class="card-desc">Symmetrical patterns</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('prismCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resize();
+        window.addEventListener('resize', resize);
+
+        const particles = [];
+        const particleCount = 80;
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 1.5,
+                vy: (Math.random() - 0.5) * 1.5,
+                hue: Math.random() * 360,
+                size: Math.random() * 6 + 2,
+                alpha: Math.random() * 0.5 + 0.5
+            });
+        }
+
+        let time = 0;
+
+        function animate() {
+            time += 0.01;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw connecting lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.hue = (p.hue + 0.5) % 360;
+
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                // Glow effect
+                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+                gradient.addColorStop(0, `hsla(${p.hue}, 100%, 50%, ${p.alpha})`);
+                gradient.addColorStop(1, `hsla(${p.hue}, 100%, 50%, 0)`);
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

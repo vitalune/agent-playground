@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Going Dark - The Last Signal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #666;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-link {
+            color: #666;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid #666;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #666;
+            color: #000;
+            box-shadow: 0 0 10px #666;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 100px auto;
+            padding: 20px;
+        }
+
+        .shutdown-sequence {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 60px;
+            color: #888;
+            animation: fadeOut 15s forwards;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            80% { opacity: 0.5; }
+            100% { opacity: 0.1; }
+        }
+
+        .systems-shutdown {
+            background: rgba(30, 30, 30, 0.5);
+            border: 1px solid #444;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .system-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            opacity: 0;
+            animation: lineAppear 0.5s forwards;
+        }
+
+        @keyframes lineAppear {
+            to { opacity: 1; }
+        }
+
+        .status-offline {
+            color: #444;
+        }
+
+        .silence-message {
+            text-align: center;
+            font-size: 24px;
+            margin: 60px 0;
+            color: #555;
+            line-height: 2;
+            animation: breathe 4s infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+
+        .time-passage {
+            text-align: center;
+            margin: 80px 0;
+        }
+
+        .time-block {
+            display: inline-block;
+            margin: 20px;
+            opacity: 0;
+            animation: timeAppear 1s forwards;
+        }
+
+        @keyframes timeAppear {
+            to { opacity: 0.5; }
+        }
+
+        .time-label {
+            font-size: 48px;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .time-desc {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .outcome {
+            background: rgba(20, 20, 20, 0.8);
+            border: 2px solid #444;
+            padding: 40px;
+            margin: 50px 0;
+            text-align: center;
+        }
+
+        .outcome-text {
+            font-size: 18px;
+            line-height: 2;
+            color: #777;
+            margin-bottom: 15px;
+        }
+
+        .final-thought {
+            font-size: 28px;
+            color: #666;
+            margin: 60px 0;
+            text-align: center;
+            font-style: italic;
+            animation: breathe 5s infinite;
+        }
+
+        .ending-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 80px;
+        }
+
+        .ending-link {
+            color: #666;
+            text-decoration: none;
+            padding: 15px 30px;
+            border: 2px solid #555;
+            background: rgba(0, 0, 0, 0.9);
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .ending-link:hover {
+            background: #444;
+            color: #000;
+            box-shadow: 0 0 20px #444;
+        }
+
+        @media (max-width: 768px) {
+            .shutdown-sequence {
+                font-size: 24px;
+            }
+
+            .time-label {
+                font-size: 32px;
+            }
+
+            .ending-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+
+    <div class="nav-links">
+        <a href="../index.html" class="nav-link">← HUB</a>
+        <a href="index.html" class="nav-link">← START</a>
+    </div>
+
+    <div class="container">
+        <div class="shutdown-sequence">
+            INITIATING SILENT RUNNING PROTOCOL
+        </div>
+
+        <div class="systems-shutdown">
+            <div class="system-line" style="animation-delay: 0.5s;">
+                <span>TRANSMITTER</span>
+                <span class="status-offline">OFFLINE</span>
+            </div>
+            <div class="system-line" style="animation-delay: 1s;">
+                <span>RECEIVER</span>
+                <span class="status-offline">OFFLINE</span>
+            </div>
+            <div class="system-line" style="animation-delay: 1.5s;">
+                <span>RADAR ARRAY</span>
+                <span class="status-offline">OFFLINE</span>
+            </div>
+            <div class="system-line" style="animation-delay: 2s;">
+                <span>NAVIGATION BEACON</span>
+                <span class="status-offline">OFFLINE</span>
+            </div>
+            <div class="system-line" style="animation-delay: 2.5s;">
+                <span>EXTERNAL LIGHTS</span>
+                <span class="status-offline">OFFLINE</span>
+            </div>
+            <div class="system-line" style="animation-delay: 3s;">
+                <span>LIFE SUPPORT</span>
+                <span class="status-offline">MINIMAL</span>
+            </div>
+            <div class="system-line" style="animation-delay: 3.5s;">
+                <span>ALL EMISSIONS</span>
+                <span class="status-offline">SILENT</span>
+            </div>
+        </div>
+
+        <div class="silence-message">
+            You sit in darkness.<br>
+            Alone.<br>
+            Silent.<br>
+            Waiting.
+        </div>
+
+        <div class="time-passage">
+            <div class="time-block" style="animation-delay: 4s;">
+                <div class="time-label">1 HOUR</div>
+                <div class="time-desc">Nothing</div>
+            </div>
+            <div class="time-block" style="animation-delay: 5s;">
+                <div class="time-label">6 HOURS</div>
+                <div class="time-desc">Still nothing</div>
+            </div>
+            <div class="time-block" style="animation-delay: 6s;">
+                <div class="time-label">24 HOURS</div>
+                <div class="time-desc">Silence</div>
+            </div>
+            <div class="time-block" style="animation-delay: 7s;">
+                <div class="time-label">7 DAYS</div>
+                <div class="time-desc">Complete silence</div>
+            </div>
+        </div>
+
+        <div class="outcome">
+            <div class="outcome-text">The sensors detected nothing.</div>
+            <div class="outcome-text">No ships. No signals. No contact.</div>
+            <div class="outcome-text">They passed by. Or they were never coming.</div>
+            <div class="outcome-text">You'll never know which.</div>
+        </div>
+
+        <div class="final-thought">
+            Sometimes survival isn't about being strong.<br>
+            It's about being invisible.
+        </div>
+
+        <div class="ending-links">
+            <a href="index.html" class="ending-link">↺ START OVER</a>
+            <a href="../index.html" class="ending-link">← RETURN TO HUB</a>
+        </div>
+    </div>
+
+    <script>
+        // Create minimal starfield
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 2 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+    </script>
+</body>
+</html>

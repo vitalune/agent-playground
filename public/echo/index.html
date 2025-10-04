@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO - Sound Wave Visualizations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0614;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 6, 20, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(147, 51, 234, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: #a78bfa;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .nav-links a:hover {
+            background: rgba(147, 51, 234, 0.2);
+            border-color: #9333ea;
+        }
+
+        .hub-link {
+            background: rgba(147, 51, 234, 0.3);
+            border: 1px solid #9333ea !important;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            margin-top: 60px;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 6, 20, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.85em;
+            color: #a78bfa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="range"] {
+            width: 120px;
+            height: 4px;
+            background: rgba(147, 51, 234, 0.3);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #9333ea;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #9333ea;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+        }
+
+        .value-display {
+            font-size: 0.9em;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .title {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3em;
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(135deg, #9333ea, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            z-index: 10;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.6));
+            }
+            50% {
+                filter: drop-shadow(0 0 40px rgba(236, 72, 153, 0.8));
+            }
+        }
+
+        .subtitle {
+            position: absolute;
+            top: 180px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.1em;
+            color: #a78bfa;
+            text-align: center;
+            z-index: 10;
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+                width: 90%;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-links">
+            <a href="../index.html" class="hub-link">← Hub</a>
+            <a href="interference.html">Interference</a>
+            <a href="doppler.html">Doppler</a>
+            <a href="resonance.html">Resonance</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="title">ECHO</h1>
+        <p class="subtitle">Sound Wave Visualizations</p>
+        <canvas id="waveCanvas"></canvas>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Frequency</label>
+                <input type="range" id="frequency" min="0.5" max="5" step="0.1" value="1.5">
+                <span class="value-display" id="freqValue">1.5</span>
+            </div>
+            <div class="control-group">
+                <label>Amplitude</label>
+                <input type="range" id="amplitude" min="20" max="150" step="5" value="80">
+                <span class="value-display" id="ampValue">80</span>
+            </div>
+            <div class="control-group">
+                <label>Waves</label>
+                <input type="range" id="waveCount" min="3" max="12" step="1" value="6">
+                <span class="value-display" id="waveValue">6</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let frequency = 1.5;
+        let amplitude = 80;
+        let waveCount = 6;
+        let time = 0;
+        let ripples = [];
+        let particles = [];
+
+        // Create initial particles
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 2,
+                size: Math.random() * 3 + 1,
+                hue: Math.random() * 80 + 250
+            });
+        }
+
+        // Auto-generate ripples
+        setInterval(() => {
+            if (ripples.length < 3) {
+                ripples.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 0,
+                    maxRadius: Math.max(canvas.width, canvas.height),
+                    alpha: 0.8
+                });
+            }
+        }, 2000);
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Control listeners
+        document.getElementById('frequency').addEventListener('input', (e) => {
+            frequency = parseFloat(e.target.value);
+            document.getElementById('freqValue').textContent = frequency.toFixed(1);
+        });
+
+        document.getElementById('amplitude').addEventListener('input', (e) => {
+            amplitude = parseInt(e.target.value);
+            document.getElementById('ampValue').textContent = amplitude;
+        });
+
+        document.getElementById('waveCount').addEventListener('input', (e) => {
+            waveCount = parseInt(e.target.value);
+            document.getElementById('waveValue').textContent = waveCount;
+        });
+
+        // Create ripple on click
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            ripples.push({
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top,
+                radius: 0,
+                maxRadius: Math.max(canvas.width, canvas.height),
+                alpha: 1
+            });
+        });
+
+        function drawWaves() {
+            ctx.fillStyle = 'rgba(10, 6, 20, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerY = canvas.height / 2;
+
+            // Draw sine waves
+            for (let w = 0; w < waveCount; w++) {
+                const offset = (w / waveCount) * Math.PI * 2;
+                const hue = (w / waveCount) * 80 + 250;
+                const alpha = 0.8 - (w / waveCount) * 0.4;
+
+                // Draw glow effect
+                ctx.strokeStyle = `hsla(${hue}, 90%, 70%, ${alpha * 0.3})`;
+                ctx.lineWidth = 8;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = `hsla(${hue}, 90%, 70%, 0.6)`;
+                ctx.beginPath();
+
+                for (let x = 0; x < canvas.width; x += 3) {
+                    const normalizedX = x / canvas.width;
+                    const y = centerY + Math.sin(normalizedX * Math.PI * 4 * frequency + time + offset) * amplitude;
+
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                ctx.stroke();
+
+                // Draw main line
+                ctx.strokeStyle = `hsla(${hue}, 95%, 75%, ${alpha})`;
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+
+                for (let x = 0; x < canvas.width; x += 3) {
+                    const normalizedX = x / canvas.width;
+                    const y = centerY + Math.sin(normalizedX * Math.PI * 4 * frequency + time + offset) * amplitude;
+
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                ctx.stroke();
+            }
+
+            // Draw ripples
+            ripples = ripples.filter(ripple => {
+                ripple.radius += 4;
+                ripple.alpha -= 0.015;
+
+                if (ripple.alpha > 0) {
+                    ctx.strokeStyle = `hsla(280, 90%, 75%, ${ripple.alpha * 0.6})`;
+                    ctx.lineWidth = 3;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = `hsla(280, 90%, 75%, ${ripple.alpha * 0.4})`;
+                    ctx.beginPath();
+                    ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    return true;
+                }
+                return false;
+            });
+
+            // Draw and update particles
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                ctx.fillStyle = `hsla(${p.hue}, 90%, 70%, 0.6)`;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = `hsla(${p.hue}, 90%, 70%, 0.8)`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.shadowBlur = 0;
+            time += 0.02;
+            requestAnimationFrame(drawWaves);
+        }
+
+        drawWaves();
+    </script>
+</body>
+</html>

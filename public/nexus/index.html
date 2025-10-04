@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS - Force Graph</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: white;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+            cursor: grab;
+        }
+
+        canvas:active {
+            cursor: grabbing;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            z-index: 100;
+        }
+
+        .controls h1 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls p {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-bottom: 15px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid #667eea;
+            border-radius: 20px;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #667eea;
+            transform: scale(1.05);
+        }
+
+        .stats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            font-size: 0.85em;
+            z-index: 100;
+        }
+
+        .stats div {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div class="controls">
+        <h1>NEXUS</h1>
+        <p>Drag nodes • Click to spawn • Space to pulse</p>
+        <div class="nav-links">
+            <a href="../index.html">← Hub</a>
+            <a href="neural.html">Neural Net</a>
+            <a href="tree.html">Tree Graph</a>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div>Nodes: <span id="nodeCount">0</span></div>
+        <div>Edges: <span id="edgeCount">0</span></div>
+        <div>FPS: <span id="fps">60</span></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Node {
+            constructor(x, y, id) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.radius = 8;
+                this.id = id;
+                this.hue = (id * 137.5) % 360;
+                this.mass = 1;
+                this.grabbed = false;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+                this.pulseSpeed = 0.02 + Math.random() * 0.03;
+            }
+
+            update() {
+                this.pulsePhase += this.pulseSpeed;
+
+                if (!this.grabbed) {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= 0.95;
+                    this.vy *= 0.95;
+
+                    // Boundary collision
+                    if (this.x < this.radius) {
+                        this.x = this.radius;
+                        this.vx *= -0.8;
+                    }
+                    if (this.x > width - this.radius) {
+                        this.x = width - this.radius;
+                        this.vx *= -0.8;
+                    }
+                    if (this.y < this.radius) {
+                        this.y = this.radius;
+                        this.vy *= -0.8;
+                    }
+                    if (this.y > height - this.radius) {
+                        this.y = height - this.radius;
+                        this.vy *= -0.8;
+                    }
+                }
+            }
+
+            draw() {
+                const pulse = Math.sin(this.pulsePhase) * 0.3 + 1;
+                const glowSize = this.radius * pulse;
+
+                // Outer glow
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowSize * 3);
+                gradient.addColorStop(0, `hsla(${this.hue}, 100%, 50%, 0.8)`);
+                gradient.addColorStop(0.5, `hsla(${this.hue}, 100%, 50%, 0.3)`);
+                gradient.addColorStop(1, `hsla(${this.hue}, 100%, 50%, 0)`);
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, glowSize * 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Node
+                ctx.fillStyle = `hsl(${this.hue}, 100%, 50%)`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * pulse, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Core
+                ctx.fillStyle = `hsla(255, 100%, 100%, ${0.8 + pulse * 0.2})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.5 * pulse, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Edge {
+            constructor(node1, node2) {
+                this.node1 = node1;
+                this.node2 = node2;
+                this.strength = 0.02;
+                this.distance = 100;
+                this.particles = [];
+                for (let i = 0; i < 3; i++) {
+                    this.particles.push({
+                        progress: Math.random(),
+                        speed: 0.005 + Math.random() * 0.01
+                    });
+                }
+            }
+
+            update() {
+                const dx = this.node2.x - this.node1.x;
+                const dy = this.node2.y - this.node1.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > 0) {
+                    const force = (dist - this.distance) * this.strength;
+                    const fx = (dx / dist) * force;
+                    const fy = (dy / dist) * force;
+
+                    this.node1.vx += fx;
+                    this.node1.vy += fy;
+                    this.node2.vx -= fx;
+                    this.node2.vy -= fy;
+                }
+
+                // Update particles
+                for (let p of this.particles) {
+                    p.progress += p.speed;
+                    if (p.progress > 1) p.progress = 0;
+                }
+            }
+
+            draw() {
+                const dx = this.node2.x - this.node1.x;
+                const dy = this.node2.y - this.node1.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const maxDist = 200;
+                const opacity = Math.max(0, 1 - dist / maxDist);
+
+                if (opacity > 0) {
+                    // Draw line
+                    const gradient = ctx.createLinearGradient(
+                        this.node1.x, this.node1.y,
+                        this.node2.x, this.node2.y
+                    );
+                    gradient.addColorStop(0, `hsla(${this.node1.hue}, 100%, 50%, ${opacity * 0.4})`);
+                    gradient.addColorStop(1, `hsla(${this.node2.hue}, 100%, 50%, ${opacity * 0.4})`);
+
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 1.5 * opacity;
+                    ctx.beginPath();
+                    ctx.moveTo(this.node1.x, this.node1.y);
+                    ctx.lineTo(this.node2.x, this.node2.y);
+                    ctx.stroke();
+
+                    // Draw flowing particles
+                    for (let p of this.particles) {
+                        const x = this.node1.x + dx * p.progress;
+                        const y = this.node1.y + dy * p.progress;
+                        const hue = this.node1.hue + (this.node2.hue - this.node1.hue) * p.progress;
+
+                        ctx.fillStyle = `hsla(${hue}, 100%, 70%, ${opacity})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+
+        class BackgroundParticle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.3;
+                this.vy = (Math.random() - 0.5) * 0.3;
+                this.size = Math.random() * 1.5;
+                this.opacity = Math.random() * 0.3;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(102, 126, 234, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        const nodes = [];
+        const edges = [];
+        const bgParticles = [];
+
+        // Create background particles
+        for (let i = 0; i < 50; i++) {
+            bgParticles.push(new BackgroundParticle());
+        }
+
+        // Create initial network
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            nodes.push(new Node(x, y, i));
+        }
+
+        // Connect nodes
+        for (let i = 0; i < nodes.length; i++) {
+            const connections = Math.floor(Math.random() * 3) + 1;
+            for (let j = 0; j < connections; j++) {
+                const target = Math.floor(Math.random() * nodes.length);
+                if (target !== i) {
+                    edges.push(new Edge(nodes[i], nodes[target]));
+                }
+            }
+        }
+
+        // Repulsion between nodes
+        function applyRepulsion() {
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[j].x - nodes[i].x;
+                    const dy = nodes[j].y - nodes[i].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist > 0 && dist < 150) {
+                        const force = 50 / (dist * dist);
+                        const fx = (dx / dist) * force;
+                        const fy = (dy / dist) * force;
+
+                        nodes[i].vx -= fx;
+                        nodes[i].vy -= fy;
+                        nodes[j].vx += fx;
+                        nodes[j].vy += fy;
+                    }
+                }
+            }
+        }
+
+        // Mouse interaction
+        let mouseX = 0, mouseY = 0;
+        let isDragging = false;
+        let draggedNode = null;
+
+        canvas.addEventListener('mousedown', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            for (let node of nodes) {
+                const dx = mouseX - node.x;
+                const dy = mouseY - node.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < node.radius * 2) {
+                    draggedNode = node;
+                    node.grabbed = true;
+                    isDragging = true;
+                    return;
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            if (isDragging && draggedNode) {
+                draggedNode.x = mouseX;
+                draggedNode.y = mouseY;
+                draggedNode.vx = 0;
+                draggedNode.vy = 0;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (draggedNode) {
+                draggedNode.grabbed = false;
+                draggedNode = null;
+            }
+            isDragging = false;
+        });
+
+        canvas.addEventListener('click', (e) => {
+            if (!isDragging) {
+                const newNode = new Node(e.clientX, e.clientY, nodes.length);
+                nodes.push(newNode);
+
+                // Connect to nearby nodes
+                for (let node of nodes) {
+                    if (node !== newNode) {
+                        const dx = newNode.x - node.x;
+                        const dy = newNode.y - node.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 150) {
+                            edges.push(new Edge(newNode, node));
+                        }
+                    }
+                }
+            }
+        });
+
+        // Pulse effect with spacebar
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                for (let node of nodes) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const force = 5;
+                    node.vx += Math.cos(angle) * force;
+                    node.vy += Math.sin(angle) * force;
+                }
+            }
+        });
+
+        // FPS counter
+        let lastTime = performance.now();
+        let frames = 0;
+        let fps = 60;
+
+        function updateStats() {
+            document.getElementById('nodeCount').textContent = nodes.length;
+            document.getElementById('edgeCount').textContent = edges.length;
+            document.getElementById('fps').textContent = Math.round(fps);
+        }
+
+        // Animation loop
+        function animate() {
+            // Calculate FPS
+            const now = performance.now();
+            frames++;
+            if (now >= lastTime + 1000) {
+                fps = (frames * 1000) / (now - lastTime);
+                frames = 0;
+                lastTime = now;
+                updateStats();
+            }
+
+            // Clear canvas
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw background particles
+            for (let p of bgParticles) {
+                p.update();
+                p.draw();
+            }
+
+            // Update physics
+            applyRepulsion();
+            for (let edge of edges) {
+                edge.update();
+            }
+            for (let node of nodes) {
+                node.update();
+            }
+
+            // Draw edges first
+            for (let edge of edges) {
+                edge.draw();
+            }
+
+            // Draw nodes on top
+            for (let node of nodes) {
+                node.draw();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

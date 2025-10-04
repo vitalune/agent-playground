@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Communication Attempt - The Last Signal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0af;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-link {
+            color: #0af;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid #0af;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #0af;
+            color: #000;
+            box-shadow: 0 0 20px #0af;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 100px auto;
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 50px;
+            text-shadow: 0 0 20px #0af;
+            letter-spacing: 4px;
+        }
+
+        .dialogue-box {
+            background: rgba(0, 50, 80, 0.3);
+            border: 2px solid #0af;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .message {
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid;
+            opacity: 0;
+            animation: messageFadeIn 0.5s forwards;
+        }
+
+        @keyframes messageFadeIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .message-you {
+            border-left-color: #0f0;
+            background: rgba(0, 255, 0, 0.05);
+            color: #0f0;
+            transform: translateX(-30px);
+        }
+
+        .message-them {
+            border-left-color: #f0f;
+            background: rgba(255, 0, 255, 0.05);
+            color: #f0f;
+            transform: translateX(30px);
+        }
+
+        .message-label {
+            font-size: 12px;
+            opacity: 0.6;
+            margin-bottom: 10px;
+        }
+
+        .message-text {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .translation-note {
+            font-size: 12px;
+            margin-top: 10px;
+            opacity: 0.5;
+            font-style: italic;
+        }
+
+        .revelation {
+            background: rgba(255, 0, 100, 0.2);
+            border: 3px solid #f0f;
+            padding: 40px;
+            margin: 50px 0;
+            text-align: center;
+        }
+
+        .revelation-text {
+            font-size: 28px;
+            color: #f0f;
+            line-height: 1.8;
+            text-shadow: 0 0 20px #f0f;
+        }
+
+        .understanding {
+            background: rgba(0, 100, 150, 0.2);
+            border-left: 5px solid #0af;
+            padding: 30px;
+            margin: 40px 0;
+        }
+
+        .understanding-text {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 50px;
+        }
+
+        .choice-card {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0af;
+            padding: 30px;
+            text-decoration: none;
+            color: #0af;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choice-card::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(transparent, rgba(0, 170, 255, 0.2));
+            transition: top 0.5s;
+        }
+
+        .choice-card:hover::before {
+            top: 0;
+        }
+
+        .choice-card:hover {
+            border-color: #0ff;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);
+            transform: translateY(-5px);
+        }
+
+        .choice-title {
+            font-size: 22px;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .choice-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 32px;
+            }
+
+            .revelation-text {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+
+    <div class="nav-links">
+        <a href="../index.html" class="nav-link">← HUB</a>
+        <a href="index.html" class="nav-link">← START</a>
+    </div>
+
+    <div class="container">
+        <div class="title">FIRST CONTACT</div>
+
+        <div class="dialogue-box">
+            <div class="message message-you" style="animation-delay: 0.5s;">
+                <div class="message-label">YOU → TRANSMISSION</div>
+                <div class="message-text">
+                    "We are humans from planet Earth. We come in peace. What are your intentions?"
+                </div>
+            </div>
+
+            <div class="message message-them" style="animation-delay: 1.5s;">
+                <div class="message-label">THEM → RESPONSE</div>
+                <div class="message-text">
+                    [TRANSLATED FROM MATHEMATICAL HARMONICS]<br>
+                    "Intentions. Curious concept. We do not 'intend'. We are process. We are transformation."
+                </div>
+                <div class="translation-note">Translation confidence: 67%</div>
+            </div>
+
+            <div class="message message-you" style="animation-delay: 2.5s;">
+                <div class="message-label">YOU → TRANSMISSION</div>
+                <div class="message-text">
+                    "Why did you mark Earth on the star map? Are you a threat to us?"
+                </div>
+            </div>
+
+            <div class="message message-them" style="animation-delay: 3.5s;">
+                <div class="message-label">THEM → RESPONSE</div>
+                <div class="message-text">
+                    "Earth marked because Earth is ready. You called. We answered. Threat is your interpretation. We offer evolution."
+                </div>
+                <div class="translation-note">Translation confidence: 82%</div>
+            </div>
+
+            <div class="message message-you" style="animation-delay: 4.5s;">
+                <div class="message-label">YOU → TRANSMISSION</div>
+                <div class="message-text">
+                    "Evolution? What do you mean? What do you want from us?"
+                </div>
+            </div>
+
+            <div class="message message-them" style="animation-delay: 5.5s;">
+                <div class="message-label">THEM → RESPONSE</div>
+                <div class="message-text">
+                    "Not FROM. FOR. Biological intelligence trapped in linear time. We free. We merge. We transcend. Join the chorus. Billions already sing."
+                </div>
+                <div class="translation-note">Translation confidence: 91%</div>
+            </div>
+        </div>
+
+        <div class="revelation">
+            <div class="revelation-text">
+                They're not invaders.<br>
+                They're not explorers.<br>
+                They're collectors of consciousness.<br><br>
+                And they want yours.
+            </div>
+        </div>
+
+        <div class="understanding">
+            <div class="understanding-text">&gt; They've done this before. On countless worlds.</div>
+            <div class="understanding-text">&gt; Each civilization that "joins" them adds to their collective intelligence.</div>
+            <div class="understanding-text">&gt; They see it as a gift. As ascension.</div>
+            <div class="understanding-text">&gt; But individuality, identity, free will - all erased.</div>
+            <div class="understanding-text">&gt; Earth has minutes before they arrive.</div>
+        </div>
+
+        <div class="choices">
+            <a href="warning.html" class="choice-card">
+                <div class="choice-title">WARN HUMANITY</div>
+                <div class="choice-desc">Send emergency alert. Earth must prepare for what's coming. Defense might be impossible, but they deserve to know.</div>
+            </a>
+
+            <a href="execute.html" class="choice-card">
+                <div class="choice-title">ACCEPT THE OFFER</div>
+                <div class="choice-desc">Maybe they're right. Maybe this is evolution. Be the first human to join them.</div>
+            </a>
+
+            <a href="shutdown.html" class="choice-card">
+                <div class="choice-title">GO DARK</div>
+                <div class="choice-desc">Shut everything down. Maybe if Earth stays silent, they'll pass by. It's humanity's only chance.</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Create starfield
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 150; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+    </script>
+</body>
+</html>

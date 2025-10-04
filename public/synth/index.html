@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTH - Audio Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            border-bottom: 2px solid #ff006e;
+        }
+
+        .nav h1 {
+            font-size: 1.5em;
+            color: #ff006e;
+            text-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: #8ecae6;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid #8ecae6;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #8ecae6;
+            color: #000;
+            box-shadow: 0 0 15px rgba(142, 202, 230, 0.5);
+        }
+
+        .container {
+            margin-top: 80px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        #visualizer {
+            width: 100%;
+            max-width: 1200px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #ff006e;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 0, 110, 0.3), inset 0 0 50px rgba(255, 0, 110, 0.1);
+        }
+
+        .pad-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .pad {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+            border: 2px solid transparent;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.1s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pad::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transition: all 0.3s;
+            z-index: 1;
+        }
+
+        .pad:active::before,
+        .pad.active::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .pad-label {
+            position: relative;
+            z-index: 2;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+
+        .pad:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 0, 110, 0.5);
+        }
+
+        .pad.active {
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 0, 110, 0.3);
+        }
+
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .knob {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            border: 3px solid #ff006e;
+            position: relative;
+            cursor: pointer;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .knob::after {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            width: 4px;
+            height: 35%;
+            background: #8ecae6;
+            border-radius: 2px;
+            transform-origin: 50% 180%;
+            box-shadow: 0 0 10px rgba(142, 202, 230, 0.8);
+        }
+
+        .knob-label {
+            color: #8ecae6;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+            .pad-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <h1>SYNTH</h1>
+        <div class="nav-links">
+            <a href="sequencer.html">Sequencer</a>
+            <a href="visualizer.html">Visualizer</a>
+            <a href="../index.html">Hub</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <canvas id="visualizer"></canvas>
+
+        <div class="pad-grid">
+            <div class="pad" data-note="C4"><span class="pad-label">C4</span></div>
+            <div class="pad" data-note="D4"><span class="pad-label">D4</span></div>
+            <div class="pad" data-note="E4"><span class="pad-label">E4</span></div>
+            <div class="pad" data-note="F4"><span class="pad-label">F4</span></div>
+            <div class="pad" data-note="G4"><span class="pad-label">G4</span></div>
+            <div class="pad" data-note="A4"><span class="pad-label">A4</span></div>
+            <div class="pad" data-note="B4"><span class="pad-label">B4</span></div>
+            <div class="pad" data-note="C5"><span class="pad-label">C5</span></div>
+            <div class="pad" data-note="D5"><span class="pad-label">D5</span></div>
+            <div class="pad" data-note="E5"><span class="pad-label">E5</span></div>
+            <div class="pad" data-note="F5"><span class="pad-label">F5</span></div>
+            <div class="pad" data-note="G5"><span class="pad-label">G5</span></div>
+        </div>
+
+        <div class="controls">
+            <div class="knob-container">
+                <div class="knob" id="volumeKnob"></div>
+                <span class="knob-label">Volume</span>
+            </div>
+            <div class="knob-container">
+                <div class="knob" id="reverbKnob"></div>
+                <span class="knob-label">Reverb</span>
+            </div>
+            <div class="knob-container">
+                <div class="knob" id="filterKnob"></div>
+                <span class="knob-label">Filter</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyser.connect(audioContext.destination);
+
+        const noteFrequencies = {
+            'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23,
+            'G4': 392.00, 'A4': 440.00, 'B4': 493.88, 'C5': 523.25,
+            'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99
+        };
+
+        let activeOscillators = new Map();
+
+        function playNote(frequency, pad) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(analyser);
+
+            oscillator.start();
+            activeOscillators.set(pad, { oscillator, gainNode });
+            pad.classList.add('active');
+        }
+
+        function stopNote(pad) {
+            const nodes = activeOscillators.get(pad);
+            if (nodes) {
+                const { oscillator, gainNode } = nodes;
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.1);
+                setTimeout(() => oscillator.stop(), 100);
+                activeOscillators.delete(pad);
+                pad.classList.remove('active');
+            }
+        }
+
+        const keyMap = {
+            'q': 0, 'w': 1, 'e': 2, 'r': 3,
+            'a': 4, 's': 5, 'd': 6, 'f': 7,
+            'z': 8, 'x': 9, 'c': 10, 'v': 11
+        };
+
+        const pads = document.querySelectorAll('.pad');
+
+        pads.forEach((pad, index) => {
+            const hue = (index * 30) % 360;
+            pad.style.background = `linear-gradient(135deg, hsl(${hue}, 100%, 50%) 0%, hsl(${hue + 60}, 100%, 40%) 100%)`;
+
+            const note = pad.dataset.note;
+            const frequency = noteFrequencies[note];
+
+            pad.addEventListener('mousedown', () => playNote(frequency, pad));
+            pad.addEventListener('mouseup', () => stopNote(pad));
+            pad.addEventListener('mouseleave', () => stopNote(pad));
+
+            pad.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                playNote(frequency, pad);
+            });
+            pad.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                stopNote(pad);
+            });
+        });
+
+        const activeKeys = new Set();
+
+        document.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (keyMap.hasOwnProperty(key) && !activeKeys.has(key)) {
+                activeKeys.add(key);
+                const padIndex = keyMap[key];
+                const pad = pads[padIndex];
+                const frequency = noteFrequencies[pad.dataset.note];
+                playNote(frequency, pad);
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+            if (keyMap.hasOwnProperty(key)) {
+                activeKeys.delete(key);
+                const padIndex = keyMap[key];
+                const pad = pads[padIndex];
+                stopNote(pad);
+            }
+        });
+
+        let time = 0;
+        let knobValues = { volume: 0.5, reverb: 0.3, filter: 0.7 };
+
+        function draw() {
+            requestAnimationFrame(draw);
+
+            analyser.getByteFrequencyData(dataArray);
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const barWidth = canvas.width / bufferLength;
+            let x = 0;
+            const hasSound = dataArray.some(val => val > 0);
+
+            for (let i = 0; i < bufferLength; i++) {
+                let barHeight = (dataArray[i] / 255) * canvas.height;
+
+                if (!hasSound) {
+                    barHeight = Math.sin(time * 0.05 + i * 0.1) * 30 + 40;
+                    barHeight += Math.cos(time * 0.03 + i * 0.15) * 15;
+                }
+
+                const hue = (i / bufferLength) * 360 + time * 0.5;
+                const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+                gradient.addColorStop(0, `hsla(${hue}, 100%, 60%, 0.9)`);
+                gradient.addColorStop(0.5, `hsla(${hue + 30}, 100%, 50%, 0.7)`);
+                gradient.addColorStop(1, `hsla(${hue}, 100%, 40%, 0.4)`);
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+                ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+                ctx.shadowBlur = 0;
+
+                x += barWidth;
+            }
+
+            time++;
+        }
+
+        const knobs = {
+            volumeKnob: 'volume',
+            reverbKnob: 'reverb',
+            filterKnob: 'filter'
+        };
+
+        Object.keys(knobs).forEach(knobId => {
+            const knob = document.getElementById(knobId);
+            const param = knobs[knobId];
+            let isDragging = false;
+            let startY = 0;
+            let startValue = knobValues[param];
+
+            function updateKnob(value) {
+                knobValues[param] = Math.max(0, Math.min(1, value));
+                const rotation = (knobValues[param] - 0.5) * 270;
+                knob.style.setProperty('--rotation', `${rotation}deg`);
+                knob.querySelector('::after') || (knob.style.transform = `rotate(${rotation}deg)`);
+            }
+
+            updateKnob(knobValues[param]);
+
+            knob.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startY = e.clientY;
+                startValue = knobValues[param];
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const delta = (startY - e.clientY) / 100;
+                    updateKnob(startValue + delta);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        });
+
+        draw();
+    </script>
+</body>
+</html>

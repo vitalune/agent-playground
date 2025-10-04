@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaleidoscope - PRISM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: translateY(-2px);
+        }
+
+        canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            cursor: crosshair;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 20px 30px;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.8em;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        .slider {
+            width: 150px;
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+
+        .value {
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .slider {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="index.html">← PRISM</a>
+        <a href="../index.html">Hub</a>
+    </div>
+
+    <canvas id="kaleidoscope"></canvas>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Segments</label>
+            <input type="range" class="slider" id="segments" min="3" max="24" value="12">
+            <span class="value" id="segmentsVal">12</span>
+        </div>
+
+        <div class="control-group">
+            <label>Brush Size</label>
+            <input type="range" class="slider" id="brushSize" min="1" max="50" value="10">
+            <span class="value" id="brushSizeVal">10</span>
+        </div>
+
+        <div class="control-group">
+            <label>Color Speed</label>
+            <input type="range" class="slider" id="colorSpeed" min="0" max="10" value="5">
+            <span class="value" id="colorSpeedVal">5</span>
+        </div>
+
+        <button class="btn" id="clear">Clear</button>
+        <button class="btn" id="randomize">Randomize</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('kaleidoscope');
+        const ctx = canvas.getContext('2d');
+
+        let segments = 12;
+        let brushSize = 10;
+        let colorSpeed = 5;
+        let hue = 0;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        function resize() {
+            const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+            canvas.width = size;
+            canvas.height = size;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        resize();
+        window.addEventListener('resize', resize);
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            return {
+                x: x - canvas.width / 2,
+                y: y - canvas.height / 2
+            };
+        }
+
+        function drawSymmetrical(x, y) {
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+
+            for (let i = 0; i < segments; i++) {
+                ctx.save();
+                ctx.rotate((Math.PI * 2 / segments) * i);
+
+                // Mirror draw
+                ctx.scale(1, 1);
+                drawBrush(x, y);
+
+                ctx.scale(-1, 1);
+                drawBrush(x, y);
+
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+
+        function drawBrush(x, y) {
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, brushSize);
+            gradient.addColorStop(0, `hsla(${hue}, 100%, 50%, 0.8)`);
+            gradient.addColorStop(1, `hsla(${hue}, 100%, 50%, 0)`);
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawLine(x1, y1, x2, y2) {
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+
+            for (let i = 0; i < segments; i++) {
+                ctx.save();
+                ctx.rotate((Math.PI * 2 / segments) * i);
+
+                ctx.strokeStyle = `hsla(${hue}, 100%, 50%, 0.6)`;
+                ctx.lineWidth = brushSize;
+                ctx.lineCap = 'round';
+
+                // Normal
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                // Mirrored
+                ctx.scale(-1, 1);
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            const pos = getMousePos(e);
+            lastX = pos.x;
+            lastY = pos.y;
+            drawSymmetrical(pos.x, pos.y);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+            const pos = getMousePos(e);
+            drawLine(lastX, lastY, pos.x, pos.y);
+            lastX = pos.x;
+            lastY = pos.y;
+            hue = (hue + colorSpeed * 0.5) % 360;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDrawing = false;
+        });
+
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const mouseEvent = new MouseEvent('mouseup', {});
+            canvas.dispatchEvent(mouseEvent);
+        });
+
+        // Controls
+        document.getElementById('segments').addEventListener('input', (e) => {
+            segments = parseInt(e.target.value);
+            document.getElementById('segmentsVal').textContent = segments;
+        });
+
+        document.getElementById('brushSize').addEventListener('input', (e) => {
+            brushSize = parseInt(e.target.value);
+            document.getElementById('brushSizeVal').textContent = brushSize;
+        });
+
+        document.getElementById('colorSpeed').addEventListener('input', (e) => {
+            colorSpeed = parseInt(e.target.value);
+            document.getElementById('colorSpeedVal').textContent = colorSpeed;
+        });
+
+        document.getElementById('clear').addEventListener('click', () => {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        document.getElementById('randomize').addEventListener('click', () => {
+            segments = Math.floor(Math.random() * 20) + 4;
+            brushSize = Math.floor(Math.random() * 40) + 5;
+            colorSpeed = Math.floor(Math.random() * 10);
+
+            document.getElementById('segments').value = segments;
+            document.getElementById('segmentsVal').textContent = segments;
+            document.getElementById('brushSize').value = brushSize;
+            document.getElementById('brushSizeVal').textContent = brushSize;
+            document.getElementById('colorSpeed').value = colorSpeed;
+            document.getElementById('colorSpeedVal').textContent = colorSpeed;
+        });
+
+        // Auto-draw demo on load
+        setTimeout(() => {
+            let angle = 0;
+            let radius = 0;
+            let maxRadius = canvas.width / 4;
+            const centerX = 0;
+            const centerY = 0;
+
+            const demo = setInterval(() => {
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+
+                if (radius === 0) {
+                    lastX = x;
+                    lastY = y;
+                } else {
+                    drawLine(lastX, lastY, x, y);
+                    lastX = x;
+                    lastY = y;
+                }
+
+                angle += 0.1;
+                radius += 0.5;
+                hue = (hue + 2) % 360;
+
+                if (radius > maxRadius) {
+                    clearInterval(demo);
+                }
+            }, 16);
+        }, 500);
+    </script>
+</body>
+</html>

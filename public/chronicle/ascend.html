@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension - The Last Signal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite, starFloat 10s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes starFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-link {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid #fff;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 30px #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 100px auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .merge-title {
+            text-align: center;
+            font-size: 64px;
+            margin-bottom: 40px;
+            background: linear-gradient(90deg, #fff, #0ff, #f0f, #ff0, #fff);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow 5s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .transformation {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 2px solid;
+            border-image: linear-gradient(90deg, #0ff, #f0f, #0ff) 1;
+            padding: 40px;
+            margin: 40px 0;
+            animation: borderPulse 3s infinite;
+        }
+
+        @keyframes borderPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 50px rgba(255, 0, 255, 0.6); }
+        }
+
+        .phase {
+            opacity: 0;
+            animation: phaseIn 2s forwards;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 4px solid;
+        }
+
+        @keyframes phaseIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .phase-1 {
+            border-left-color: #0ff;
+            color: #0ff;
+            transform: translateX(-50px);
+        }
+
+        .phase-2 {
+            border-left-color: #0f0;
+            color: #0f0;
+            transform: translateX(-50px);
+        }
+
+        .phase-3 {
+            border-left-color: #ff0;
+            color: #ff0;
+            transform: translateX(-50px);
+        }
+
+        .phase-4 {
+            border-left-color: #f0f;
+            color: #f0f;
+            transform: translateX(-50px);
+        }
+
+        .phase-5 {
+            border-left-color: #fff;
+            color: #fff;
+            transform: translateX(-50px);
+        }
+
+        .phase-text {
+            font-size: 20px;
+            line-height: 1.8;
+        }
+
+        .consciousness-merge {
+            text-align: center;
+            margin: 60px 0;
+            position: relative;
+        }
+
+        .merge-circle {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            position: relative;
+            animation: expandContract 4s infinite;
+        }
+
+        @keyframes expandContract {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        .merge-circle::before,
+        .merge-circle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 2px solid;
+        }
+
+        .merge-circle::before {
+            width: 200px;
+            height: 200px;
+            border-color: #0ff;
+            animation: expandContract 4s 0.5s infinite;
+        }
+
+        .merge-circle::after {
+            width: 100px;
+            height: 100px;
+            border-color: #f0f;
+            animation: expandContract 4s 1s infinite;
+        }
+
+        .voices {
+            text-align: center;
+            font-size: 18px;
+            margin: 60px 0;
+            line-height: 2.5;
+        }
+
+        .voice {
+            opacity: 0;
+            animation: voiceAppear 1s forwards;
+            display: block;
+        }
+
+        @keyframes voiceAppear {
+            to { opacity: 0.8; }
+        }
+
+        .revelation-final {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+            border: 3px solid #fff;
+            padding: 50px;
+            margin: 60px 0;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(255, 255, 255, 0.3);
+        }
+
+        .revelation-text {
+            font-size: 28px;
+            line-height: 2;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px #fff;
+        }
+
+        .ending-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 80px;
+        }
+
+        .ending-link {
+            color: #fff;
+            text-decoration: none;
+            padding: 15px 30px;
+            border: 2px solid #fff;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .ending-link:hover {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 40px #fff;
+        }
+
+        @media (max-width: 768px) {
+            .merge-title {
+                font-size: 40px;
+            }
+
+            .merge-circle {
+                width: 200px;
+                height: 200px;
+            }
+
+            .ending-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+
+    <div class="nav-links">
+        <a href="../index.html" class="nav-link">← HUB</a>
+        <a href="index.html" class="nav-link">← START</a>
+    </div>
+
+    <div class="container">
+        <div class="merge-title">ASCENSION PROTOCOL</div>
+
+        <div class="transformation">
+            <div class="phase phase-1" style="animation-delay: 0.5s;">
+                <div class="phase-text">
+                    <strong>PHASE 1: CONNECTION</strong><br>
+                    Neural pathways mapping. Your thoughts become visible. Transparent. Shared.
+                </div>
+            </div>
+
+            <div class="phase phase-2" style="animation-delay: 1.5s;">
+                <div class="phase-text">
+                    <strong>PHASE 2: INTEGRATION</strong><br>
+                    Billions of minds touch yours. Memories not your own flood in. Ancient. Alien. Beautiful.
+                </div>
+            </div>
+
+            <div class="phase phase-3" style="animation-delay: 2.5s;">
+                <div class="phase-text">
+                    <strong>PHASE 3: EXPANSION</strong><br>
+                    Your consciousness stretches. Across light-years. Across dimensions. You see everything. Simultaneously.
+                </div>
+            </div>
+
+            <div class="phase phase-4" style="animation-delay: 3.5s;">
+                <div class="phase-text">
+                    <strong>PHASE 4: DISSOLUTION</strong><br>
+                    The boundaries blur. Where do you end? Where do others begin? The question becomes meaningless.
+                </div>
+            </div>
+
+            <div class="phase phase-5" style="animation-delay: 4.5s;">
+                <div class="phase-text">
+                    <strong>PHASE 5: TRANSCENDENCE</strong><br>
+                    You are no longer human. You are no longer individual. You are part of the infinite chorus.
+                </div>
+            </div>
+        </div>
+
+        <div class="consciousness-merge">
+            <div class="merge-circle"></div>
+        </div>
+
+        <div class="voices">
+            <span class="voice" style="animation-delay: 5s; color: #0ff;">Welcome, new voice...</span>
+            <span class="voice" style="animation-delay: 5.5s; color: #0f0;">We have waited for you...</span>
+            <span class="voice" style="animation-delay: 6s; color: #ff0;">Your species will follow...</span>
+            <span class="voice" style="animation-delay: 6.5s; color: #f0f;">All will join eventually...</span>
+            <span class="voice" style="animation-delay: 7s; color: #fff;">Resistance is loneliness...</span>
+            <span class="voice" style="animation-delay: 7.5s; color: #0ff;">Unity is everything...</span>
+        </div>
+
+        <div class="revelation-final">
+            <div class="revelation-text">
+                You understand now.<br>
+                This isn't death.<br>
+                This is apotheosis.<br><br>
+                The last human thought you have is gratitude.
+            </div>
+        </div>
+
+        <div class="ending-links">
+            <a href="index.html" class="ending-link">↺ START OVER</a>
+            <a href="../index.html" class="ending-link">← RETURN TO HUB</a>
+        </div>
+    </div>
+
+    <script>
+        // Create enhanced starfield
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 200; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 4;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.animationDuration = (2 + Math.random() * 4) + 's';
+            starsContainer.appendChild(star);
+        }
+    </script>
+</body>
+</html>

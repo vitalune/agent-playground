@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Light Refraction - PRISM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 250px;
+        }
+
+        .info h3 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info p {
+            font-size: 0.85em;
+            opacity: 0.7;
+            line-height: 1.5;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 20px 30px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-size: 0.75em;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        .slider {
+            width: 120px;
+            height: 5px;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+
+        .value {
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="index.html">← PRISM</a>
+        <a href="../index.html">Hub</a>
+    </div>
+
+    <div class="info">
+        <h3>Light Refraction</h3>
+        <p>Watch as white light splits into its spectrum through a virtual prism. Adjust the refraction angle and ray count.</p>
+    </div>
+
+    <canvas id="refractionCanvas"></canvas>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Angle</label>
+            <input type="range" class="slider" id="angle" min="0" max="90" value="45">
+            <span class="value" id="angleVal">45°</span>
+        </div>
+
+        <div class="control-group">
+            <label>Rays</label>
+            <input type="range" class="slider" id="rays" min="5" max="50" value="25">
+            <span class="value" id="raysVal">25</span>
+        </div>
+
+        <div class="control-group">
+            <label>Spread</label>
+            <input type="range" class="slider" id="spread" min="1" max="10" value="5">
+            <span class="value" id="spreadVal">5</span>
+        </div>
+
+        <div class="control-group">
+            <label>Rotation</label>
+            <input type="range" class="slider" id="rotation" min="0" max="360" value="0">
+            <span class="value" id="rotationVal">0°</span>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('refractionCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let angle = 45;
+        let rayCount = 25;
+        let spread = 5;
+        let rotation = 0;
+        let time = 0;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resize();
+        window.addEventListener('resize', resize);
+
+        const spectrum = [
+            { hue: 0, name: 'red' },
+            { hue: 30, name: 'orange' },
+            { hue: 60, name: 'yellow' },
+            { hue: 120, name: 'green' },
+            { hue: 180, name: 'cyan' },
+            { hue: 240, name: 'blue' },
+            { hue: 270, name: 'purple' },
+            { hue: 300, name: 'magenta' }
+        ];
+
+        function drawPrism(x, y, size, rot) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rot);
+
+            // Draw prism
+            ctx.beginPath();
+            ctx.moveTo(0, -size);
+            ctx.lineTo(-size * 0.866, size * 0.5);
+            ctx.lineTo(size * 0.866, size * 0.5);
+            ctx.closePath();
+
+            // Glass effect with gradient
+            const gradient = ctx.createLinearGradient(-size, -size, size, size);
+            gradient.addColorStop(0, 'rgba(200, 230, 255, 0.3)');
+            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(200, 230, 255, 0.3)');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Outline
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Highlight
+            ctx.beginPath();
+            ctx.moveTo(-20, -size * 0.5);
+            ctx.lineTo(-10, -size * 0.5);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawLightRay(startX, startY, endX, endY, hue, alpha = 0.3) {
+            const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
+            gradient.addColorStop(0, `hsla(${hue}, 100%, 70%, ${alpha})`);
+            gradient.addColorStop(1, `hsla(${hue}, 100%, 50%, 0)`);
+
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            // Glow
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        function animate() {
+            time += 0.01;
+
+            // Dark background with gradient
+            const bgGradient = ctx.createRadialGradient(
+                canvas.width / 2, canvas.height / 2, 0,
+                canvas.width / 2, canvas.height / 2, canvas.width / 2
+            );
+            bgGradient.addColorStop(0, '#0a0a0a');
+            bgGradient.addColorStop(1, '#000000');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const prismSize = 80;
+
+            // Light source position
+            const sourceX = centerX - 300;
+            const sourceY = centerY;
+
+            // Draw incoming white light beam
+            ctx.save();
+            ctx.globalAlpha = 0.4;
+            for (let i = -10; i <= 10; i++) {
+                const offsetY = i * 2;
+                drawLightRay(sourceX - 200, sourceY + offsetY, centerX - prismSize, centerY, 0, 0.1);
+            }
+            ctx.restore();
+
+            // Draw light source
+            const sourceGradient = ctx.createRadialGradient(sourceX, sourceY, 0, sourceX, sourceY, 30);
+            sourceGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            sourceGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = sourceGradient;
+            ctx.beginPath();
+            ctx.arc(sourceX, sourceY, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw prism
+            drawPrism(centerX, centerY, prismSize, rotation * Math.PI / 180);
+
+            // Calculate refracted rays
+            const baseAngle = (angle - 45) * Math.PI / 180;
+            const spreadRadians = spread * Math.PI / 180;
+
+            spectrum.forEach((color, index) => {
+                const colorOffset = (index / spectrum.length - 0.5) * spreadRadians;
+                const rayAngle = baseAngle + colorOffset;
+
+                for (let r = 0; r < rayCount / spectrum.length; r++) {
+                    const rayOffset = (r / (rayCount / spectrum.length) - 0.5) * 0.1;
+                    const finalAngle = rayAngle + rayOffset;
+
+                    const startX = centerX + Math.cos(rotation * Math.PI / 180) * prismSize;
+                    const startY = centerY + Math.sin(rotation * Math.PI / 180) * prismSize;
+
+                    const endX = startX + Math.cos(finalAngle) * 600;
+                    const endY = startY + Math.sin(finalAngle) * 600;
+
+                    drawLightRay(startX, startY, endX, endY, color.hue, 0.4);
+                }
+            });
+
+            // Add sparkle effects
+            for (let i = 0; i < 3; i++) {
+                const sparkleAngle = time * 2 + i * Math.PI * 2 / 3;
+                const sparkleX = centerX + Math.cos(sparkleAngle) * prismSize * 0.7;
+                const sparkleY = centerY + Math.sin(sparkleAngle) * prismSize * 0.7;
+
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + Math.sin(time * 5 + i) * 0.3})`;
+                ctx.beginPath();
+                ctx.arc(sparkleX, sparkleY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Controls
+        document.getElementById('angle').addEventListener('input', (e) => {
+            angle = parseInt(e.target.value);
+            document.getElementById('angleVal').textContent = angle + '°';
+        });
+
+        document.getElementById('rays').addEventListener('input', (e) => {
+            rayCount = parseInt(e.target.value);
+            document.getElementById('raysVal').textContent = rayCount;
+        });
+
+        document.getElementById('spread').addEventListener('input', (e) => {
+            spread = parseInt(e.target.value);
+            document.getElementById('spreadVal').textContent = spread;
+        });
+
+        document.getElementById('rotation').addEventListener('input', (e) => {
+            rotation = parseInt(e.target.value);
+            document.getElementById('rotationVal').textContent = rotation + '°';
+        });
+
+        animate();
+    </script>
+</body>
+</html>

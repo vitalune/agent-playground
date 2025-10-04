@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rejection - The Last Signal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #f80;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-link {
+            color: #f80;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid #f80;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #f80;
+            color: #000;
+            box-shadow: 0 0 20px #f80;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 100px auto;
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 50px;
+            text-shadow: 0 0 30px #f80;
+            animation: flicker 2s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .decision-box {
+            background: rgba(100, 50, 0, 0.3);
+            border: 3px solid #f80;
+            padding: 40px;
+            margin: 40px 0;
+            text-align: center;
+        }
+
+        .decision-text {
+            font-size: 24px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .defiance {
+            font-size: 36px;
+            color: #fff;
+            text-shadow: 0 0 20px #f80;
+            margin: 30px 0;
+        }
+
+        .consequence-timeline {
+            margin: 60px 0;
+        }
+
+        .timeline-event {
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 5px solid #f80;
+            background: rgba(100, 50, 0, 0.1);
+            opacity: 0;
+            animation: eventSlide 1s forwards;
+            transform: translateX(-50px);
+        }
+
+        @keyframes eventSlide {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .event-time {
+            font-size: 14px;
+            color: #f80;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .event-desc {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #fb8;
+        }
+
+        .struggle {
+            background: rgba(150, 50, 0, 0.2);
+            border: 2px solid #f00;
+            padding: 40px;
+            margin: 50px 0;
+        }
+
+        .struggle-text {
+            font-size: 20px;
+            line-height: 2;
+            color: #f00;
+            text-align: center;
+        }
+
+        .final-stand {
+            text-align: center;
+            margin: 80px 0;
+        }
+
+        .stand-text {
+            font-size: 32px;
+            line-height: 2;
+            color: #f80;
+            text-shadow: 0 0 30px #f80;
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .philosophical {
+            background: linear-gradient(135deg, rgba(255, 136, 0, 0.1), transparent);
+            border-top: 2px solid #f80;
+            border-bottom: 2px solid #f80;
+            padding: 50px;
+            margin: 60px 0;
+            text-align: center;
+        }
+
+        .philosophical-text {
+            font-size: 22px;
+            line-height: 2;
+            color: #fb8;
+            font-style: italic;
+        }
+
+        .ending-choices {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 80px;
+        }
+
+        .ending-link {
+            color: #f80;
+            text-decoration: none;
+            padding: 15px 30px;
+            border: 2px solid #f80;
+            background: rgba(0, 0, 0, 0.9);
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .ending-link:hover {
+            background: #f80;
+            color: #000;
+            box-shadow: 0 0 40px #f80;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 32px;
+            }
+
+            .stand-text {
+                font-size: 24px;
+            }
+
+            .ending-choices {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+
+    <div class="nav-links">
+        <a href="../index.html" class="nav-link">← HUB</a>
+        <a href="index.html" class="nav-link">← START</a>
+    </div>
+
+    <div class="container">
+        <div class="title">THE REFUSAL</div>
+
+        <div class="decision-box">
+            <div class="decision-text">
+                You decline their offer.<br>
+                You choose to remain yourself.<br>
+                Separate. Individual. Human.
+            </div>
+            <div class="defiance">
+                "I will not surrender my humanity."
+            </div>
+        </div>
+
+        <div class="consequence-timeline">
+            <div class="timeline-event" style="animation-delay: 0.5s;">
+                <div class="event-time">T+00:00:30</div>
+                <div class="event-desc">
+                    The connection breaks. For a moment, you feel their disappointment. Like a parent watching a child make a terrible mistake.
+                </div>
+            </div>
+
+            <div class="timeline-event" style="animation-delay: 1s;">
+                <div class="event-time">T+00:02:00</div>
+                <div class="event-desc">
+                    The alien code begins fighting your systems. It doesn't want to leave. It was designed to integrate, and you're preventing that.
+                </div>
+            </div>
+
+            <div class="timeline-event" style="animation-delay: 1.5s;">
+                <div class="event-time">T+00:05:00</div>
+                <div class="event-desc">
+                    You're manually purging corrupted sectors. Fighting for control. Every deleted fragment feels like tearing out part of yourself.
+                </div>
+            </div>
+
+            <div class="timeline-event" style="animation-delay: 2s;">
+                <div class="event-time">T+00:15:00</div>
+                <div class="event-desc">
+                    It's done. The code is gone. The station is clean. You're alone again.
+                </div>
+            </div>
+        </div>
+
+        <div class="struggle">
+            <div class="struggle-text">
+                For hours afterward, you feel the echo of their presence.<br>
+                The ghost of billions of minds touching yours.<br>
+                Part of you wonders if you made the right choice.<br>
+                Part of you will always wonder.
+            </div>
+        </div>
+
+        <div class="final-stand">
+            <div class="stand-text">
+                You chose isolation over absorption.<br>
+                Loneliness over unity.<br>
+                Humanity over transcendence.<br><br>
+                Perhaps that's what makes us human.
+            </div>
+        </div>
+
+        <div class="philosophical">
+            <div class="philosophical-text">
+                "In the vast cosmic ocean,<br>
+                to be a single drop is terrifying.<br>
+                But to dissolve completely<br>
+                is to cease to exist at all."
+            </div>
+        </div>
+
+        <div class="ending-choices">
+            <a href="index.html" class="ending-link">↺ START OVER</a>
+            <a href="../index.html" class="ending-link">← RETURN TO HUB</a>
+        </div>
+    </div>
+
+    <script>
+        // Create starfield
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 120; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stars</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Cosmos</a>
+        <a href="galaxies.html">Galaxies</a>
+        <a href="planets.html">Planets</a>
+        <a href="blackhole.html">Black Hole</a>
+        <a href="nebula.html">Nebula</a>
+        <a href="../index.html">Hub</a>
+    </nav>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // Star class
+        class Star {
+            constructor(x, y, size, type) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.type = type;
+                this.pulse = Math.random() * Math.PI * 2;
+                this.connections = [];
+            }
+
+            update() {
+                this.pulse += 0.05;
+            }
+
+            draw() {
+                const colors = {
+                    blue: [150, 200, 255],
+                    white: [255, 255, 255],
+                    yellow: [255, 240, 150],
+                    red: [255, 150, 150]
+                };
+
+                const [r, g, b] = colors[this.type];
+                const pulseSize = this.size + Math.sin(this.pulse) * 2;
+                const opacity = 0.8 + Math.sin(this.pulse) * 0.2;
+
+                // Glow
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, pulseSize * 4);
+                gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${opacity * 0.6})`);
+                gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${opacity * 0.3})`);
+                gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, pulseSize * 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Core
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, pulseSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Create constellation patterns
+        const constellations = [
+            // Orion's Belt
+            [
+                new Star(width * 0.3, height * 0.3, 5, 'blue'),
+                new Star(width * 0.35, height * 0.35, 4, 'white'),
+                new Star(width * 0.4, height * 0.4, 5, 'blue')
+            ],
+            // Big Dipper shape
+            [
+                new Star(width * 0.7, height * 0.2, 4, 'yellow'),
+                new Star(width * 0.75, height * 0.25, 4, 'white'),
+                new Star(width * 0.8, height * 0.3, 3, 'yellow'),
+                new Star(width * 0.82, height * 0.4, 4, 'white')
+            ],
+            // Triangle
+            [
+                new Star(width * 0.5, height * 0.7, 6, 'red'),
+                new Star(width * 0.45, height * 0.8, 4, 'yellow'),
+                new Star(width * 0.55, height * 0.8, 4, 'yellow')
+            ]
+        ];
+
+        // Connect constellation stars
+        constellations.forEach(constellation => {
+            for (let i = 0; i < constellation.length - 1; i++) {
+                constellation[i].connections.push(constellation[i + 1]);
+            }
+        });
+
+        const allStars = constellations.flat();
+
+        // Random background stars
+        const bgStars = Array.from({ length: 400 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: Math.random() * 1.5,
+            opacity: Math.random() * 0.5 + 0.3,
+            twinkle: Math.random() * Math.PI * 2
+        }));
+
+        // Shooting stars
+        class ShootingStar {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = -50;
+                this.length = Math.random() * 80 + 40;
+                this.speed = Math.random() * 8 + 6;
+                this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.5;
+                this.opacity = 1;
+                this.fadeSpeed = Math.random() * 0.02 + 0.01;
+            }
+
+            update() {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.opacity -= this.fadeSpeed;
+
+                if (this.opacity <= 0 || this.y > height + 50) {
+                    if (Math.random() < 0.005) { // 0.5% chance to spawn
+                        this.reset();
+                    }
+                }
+            }
+
+            draw() {
+                if (this.opacity > 0) {
+                    const gradient = ctx.createLinearGradient(
+                        this.x, this.y,
+                        this.x - Math.cos(this.angle) * this.length,
+                        this.y - Math.sin(this.angle) * this.length
+                    );
+                    gradient.addColorStop(0, `rgba(255, 255, 255, ${this.opacity})`);
+                    gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(
+                        this.x - Math.cos(this.angle) * this.length,
+                        this.y - Math.sin(this.angle) * this.length
+                    );
+                    ctx.stroke();
+                }
+            }
+        }
+
+        const shootingStars = Array.from({ length: 5 }, () => new ShootingStar());
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let hoveredStar = null;
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            // Check for hover
+            hoveredStar = null;
+            allStars.forEach(star => {
+                const dx = star.x - mouseX;
+                const dy = star.y - mouseY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 30) {
+                    hoveredStar = star;
+                }
+            });
+        });
+
+        function animate() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            // Background stars
+            bgStars.forEach(star => {
+                star.twinkle += 0.03;
+                const opacity = star.opacity * (0.5 + Math.sin(star.twinkle) * 0.5);
+                ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw shooting stars
+            shootingStars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            // Draw constellation lines
+            allStars.forEach(star => {
+                star.connections.forEach(connectedStar => {
+                    const isHighlighted = hoveredStar === star || hoveredStar === connectedStar;
+                    ctx.strokeStyle = isHighlighted ? 'rgba(100, 150, 255, 0.6)' : 'rgba(255, 255, 255, 0.2)';
+                    ctx.lineWidth = isHighlighted ? 2 : 1;
+                    ctx.beginPath();
+                    ctx.moveTo(star.x, star.y);
+                    ctx.lineTo(connectedStar.x, connectedStar.y);
+                    ctx.stroke();
+                });
+            });
+
+            // Draw constellation stars
+            allStars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

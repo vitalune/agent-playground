@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNTH - Step Sequencer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            border-bottom: 2px solid #ff006e;
+        }
+
+        .nav h1 {
+            font-size: 1.5em;
+            color: #ff006e;
+            text-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: #8ecae6;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid #8ecae6;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #8ecae6;
+            color: #000;
+            box-shadow: 0 0 15px rgba(142, 202, 230, 0.5);
+        }
+
+        .container {
+            margin-top: 100px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .controls-bar {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px 30px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 0, 110, 0.3);
+        }
+
+        .play-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            border: none;
+            color: white;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(255, 0, 110, 0.4);
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(255, 0, 110, 0.6);
+        }
+
+        .play-button.playing {
+            background: linear-gradient(135deg, #8ecae6, #219ebc);
+        }
+
+        .bpm-control {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .bpm-label {
+            color: #8ecae6;
+            font-size: 0.9em;
+        }
+
+        .bpm-value {
+            font-size: 1.5em;
+            color: #ff006e;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 200px;
+            height: 6px;
+            background: rgba(255, 0, 110, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            width: 20px;
+            height: 20px;
+            background: #ff006e;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 0, 110, 0.8);
+        }
+
+        .sequencer-grid {
+            display: grid;
+            grid-template-columns: auto repeat(16, 1fr);
+            gap: 2px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #ff006e;
+        }
+
+        .row-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 15px;
+            color: #8ecae6;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .step.active {
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(255, 0, 110, 0.8);
+            animation: pulse 0.3s ease-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .step.current {
+            border: 3px solid #8ecae6;
+            box-shadow: 0 0 25px rgba(142, 202, 230, 1), inset 0 0 20px rgba(142, 202, 230, 0.3);
+            animation: glow 0.15s ease-in-out;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 25px rgba(142, 202, 230, 1), inset 0 0 20px rgba(142, 202, 230, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(142, 202, 230, 1), inset 0 0 30px rgba(142, 202, 230, 0.5); }
+        }
+
+        .step.active.current {
+            box-shadow: 0 0 30px rgba(255, 255, 255, 1), 0 0 50px rgba(255, 0, 110, 0.8);
+        }
+
+        .step.beat-marker {
+            border-color: rgba(255, 0, 110, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .step {
+                width: 30px;
+                height: 30px;
+            }
+
+            .sequencer-grid {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <h1>SYNTH - Sequencer</h1>
+        <div class="nav-links">
+            <a href="index.html">Pads</a>
+            <a href="visualizer.html">Visualizer</a>
+            <a href="../index.html">Hub</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="controls-bar">
+            <button class="play-button" id="playButton">▶</button>
+            <div class="bpm-control">
+                <span class="bpm-label">BPM</span>
+                <span class="bpm-value" id="bpmValue">120</span>
+                <input type="range" id="bpmSlider" min="60" max="200" value="120">
+            </div>
+        </div>
+
+        <div class="sequencer-grid" id="sequencer"></div>
+    </div>
+
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const tracks = ['Kick', 'Snare', 'HiHat', 'Clap'];
+        const steps = 16;
+        let sequenceData = Array(tracks.length).fill(0).map(() => Array(steps).fill(false));
+        let currentStep = 0;
+        let isPlaying = false;
+        let intervalId = null;
+        let bpm = 120;
+
+        const sounds = {
+            'Kick': { freq: 150, type: 'sine' },
+            'Snare': { freq: 200, type: 'triangle' },
+            'HiHat': { freq: 8000, type: 'square' },
+            'Clap': { freq: 1000, type: 'sawtooth' }
+        };
+
+        const sequencer = document.getElementById('sequencer');
+
+        tracks.forEach((track, trackIndex) => {
+            const label = document.createElement('div');
+            label.className = 'row-label';
+            label.textContent = track;
+            sequencer.appendChild(label);
+
+            for (let stepIndex = 0; stepIndex < steps; stepIndex++) {
+                const stepEl = document.createElement('div');
+                stepEl.className = 'step';
+                if (stepIndex % 4 === 0) stepEl.classList.add('beat-marker');
+
+                stepEl.addEventListener('click', () => {
+                    sequenceData[trackIndex][stepIndex] = !sequenceData[trackIndex][stepIndex];
+                    stepEl.classList.toggle('active');
+                });
+
+                sequencer.appendChild(stepEl);
+            }
+        });
+
+        function playSound(track) {
+            const sound = sounds[track];
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.type = sound.type;
+            oscillator.frequency.value = sound.freq;
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        function updateStep() {
+            const stepElements = document.querySelectorAll('.step');
+
+            stepElements.forEach((el, index) => {
+                const stepNum = index % steps;
+                el.classList.toggle('current', stepNum === currentStep);
+            });
+
+            tracks.forEach((track, trackIndex) => {
+                if (sequenceData[trackIndex][currentStep]) {
+                    playSound(track);
+                }
+            });
+
+            currentStep = (currentStep + 1) % steps;
+        }
+
+        document.getElementById('playButton').addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            this.textContent = isPlaying ? '⏸' : '▶';
+            this.classList.toggle('playing');
+
+            if (isPlaying) {
+                const interval = (60 / bpm) * 1000 / 4;
+                intervalId = setInterval(updateStep, interval);
+            } else {
+                clearInterval(intervalId);
+                currentStep = 0;
+                document.querySelectorAll('.step').forEach(el => el.classList.remove('current'));
+            }
+        });
+
+        const bpmSlider = document.getElementById('bpmSlider');
+        const bpmValue = document.getElementById('bpmValue');
+
+        bpmSlider.addEventListener('input', (e) => {
+            bpm = parseInt(e.target.value);
+            bpmValue.textContent = bpm;
+
+            if (isPlaying) {
+                clearInterval(intervalId);
+                const interval = (60 / bpm) * 1000 / 4;
+                intervalId = setInterval(updateStep, interval);
+            }
+        });
+    </script>
+</body>
+</html>

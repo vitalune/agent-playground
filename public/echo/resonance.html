@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resonance - ECHO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0614;
+            color: white;
+            overflow: hidden;
+        }
+
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 6, 20, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(147, 51, 234, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: #a78bfa;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .nav-links a:hover {
+            background: rgba(147, 51, 234, 0.2);
+            border-color: #9333ea;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .info {
+            position: absolute;
+            top: 80px;
+            left: 30px;
+            background: rgba(10, 6, 20, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            max-width: 300px;
+            z-index: 100;
+        }
+
+        .info h2 {
+            background: linear-gradient(135deg, #9333ea, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .info p {
+            font-size: 0.9em;
+            color: #a78bfa;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-links">
+            <a href="index.html">← ECHO</a>
+            <a href="interference.html">Interference</a>
+            <a href="doppler.html">Doppler</a>
+        </div>
+    </nav>
+
+    <div class="info">
+        <h2>Resonance</h2>
+        <p>Standing waves and harmonic oscillation. Watch the nodes and antinodes pulse with energy.</p>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let time = 0;
+        let oscillators = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            createOscillators();
+        }
+
+        function createOscillators() {
+            oscillators = [];
+            const count = 12;
+            const spacing = canvas.width / (count + 1);
+
+            for (let i = 1; i <= count; i++) {
+                oscillators.push({
+                    x: i * spacing,
+                    baseY: canvas.height / 2,
+                    amplitude: 0,
+                    frequency: i * 0.5,
+                    phase: i * 0.3
+                });
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function draw() {
+            ctx.fillStyle = 'rgba(10, 6, 20, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update oscillators with resonance
+            oscillators.forEach((osc, i) => {
+                const resonance = Math.sin(time * 0.05 + osc.phase);
+                osc.amplitude = 100 + resonance * 80;
+
+                const y = osc.baseY + Math.sin(time * osc.frequency) * osc.amplitude;
+
+                // Draw oscillator
+                const hue = (i / oscillators.length) * 80 + 250;
+                ctx.fillStyle = `hsla(${hue}, 90%, 70%, 0.8)`;
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = `hsla(${hue}, 90%, 70%, 0.6)`;
+                ctx.beginPath();
+                ctx.arc(osc.x, y, 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw connection line
+                if (i > 0) {
+                    const prevOsc = oscillators[i - 1];
+                    const prevY = prevOsc.baseY + Math.sin(time * prevOsc.frequency) * prevOsc.amplitude;
+
+                    ctx.strokeStyle = `hsla(${hue}, 90%, 70%, 0.4)`;
+                    ctx.lineWidth = 3;
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.moveTo(prevOsc.x, prevY);
+                    ctx.lineTo(osc.x, y);
+                    ctx.stroke();
+                }
+
+                // Draw standing wave trail
+                ctx.strokeStyle = `hsla(${hue}, 90%, 70%, 0.2)`;
+                ctx.lineWidth = 1;
+                ctx.shadowBlur = 5;
+                ctx.beginPath();
+                ctx.moveTo(osc.x, osc.baseY - 200);
+                ctx.lineTo(osc.x, osc.baseY + 200);
+                ctx.stroke();
+            });
+
+            ctx.shadowBlur = 0;
+            time += 0.1;
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Double-Slit Experiment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff88;
+            overflow-x: hidden;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px 20px;
+            border-bottom: 2px solid #00ff88;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header a {
+            color: #00ff88;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: 1px solid #00ff88;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .header a:hover {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .container {
+            margin-top: 80px;
+            padding: 40px 20px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px #00ff88;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1em;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            background: #000;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            padding: 12px 24px;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #00ff88;
+            color: #000;
+            transform: scale(1.05);
+        }
+
+        button.active {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .info {
+            text-align: center;
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-top: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .mode-indicator {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>DOUBLE-SLIT EXPERIMENT</div>
+        <a href="index.html">← Back to Quantum Lab</a>
+    </div>
+
+    <div class="container">
+        <h1>🔬 Double-Slit Experiment</h1>
+        <p class="subtitle">Wave-particle duality visualization</p>
+
+        <div class="mode-indicator" id="modeIndicator">
+            MODE: Wave Interference Pattern
+        </div>
+
+        <canvas id="doubleSlitCanvas"></canvas>
+
+        <div class="controls">
+            <button id="waveMode" class="active">Wave Mode</button>
+            <button id="particleMode">Particle Mode</button>
+            <button id="bothMode">Both Modes</button>
+            <button id="reset">Reset</button>
+        </div>
+
+        <p class="info">
+            This simulation demonstrates wave-particle duality. In wave mode, you see interference patterns.
+            In particle mode, individual particles build up the same pattern over time - the quantum mystery!
+            When both slits are open, an interference pattern emerges. Close one slit and the pattern disappears.
+        </p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('doubleSlitCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = Math.min(1200, window.innerWidth - 40);
+        canvas.height = 600;
+
+        let mode = 'wave'; // 'wave', 'particle', 'both'
+        let particles = [];
+        let detectionScreen = new Array(canvas.height).fill(0);
+        let time = 0;
+
+        const config = {
+            sourceX: 100,
+            barrierX: canvas.width * 0.4,
+            screenX: canvas.width * 0.85,
+            slit1Y: canvas.height * 0.35,
+            slit2Y: canvas.height * 0.65,
+            slitHeight: 60
+        };
+
+        class QuantumParticle {
+            constructor() {
+                this.x = config.sourceX;
+                this.y = canvas.height / 2 + (Math.random() - 0.5) * 100;
+                this.speed = 3 + Math.random();
+                this.angle = (Math.random() - 0.5) * 0.3;
+                this.alpha = 1;
+                this.passed = false;
+            }
+
+            update() {
+                this.x += this.speed * Math.cos(this.angle);
+                this.y += this.speed * Math.sin(this.angle);
+
+                // Check barrier collision
+                if (this.x >= config.barrierX && this.x <= config.barrierX + 10 && !this.passed) {
+                    const inSlit1 = this.y >= config.slit1Y - config.slitHeight/2 &&
+                                   this.y <= config.slit1Y + config.slitHeight/2;
+                    const inSlit2 = this.y >= config.slit2Y - config.slitHeight/2 &&
+                                   this.y <= config.slit2Y + config.slitHeight/2;
+
+                    if (inSlit1 || inSlit2) {
+                        this.passed = true;
+                        // Diffraction effect
+                        this.angle += (Math.random() - 0.5) * 0.8;
+                    } else {
+                        this.alpha = 0;
+                    }
+                }
+
+                // Detection at screen
+                if (this.x >= config.screenX && this.alpha > 0) {
+                    const screenY = Math.floor(this.y);
+                    if (screenY >= 0 && screenY < canvas.height) {
+                        detectionScreen[screenY] += 1;
+                    }
+                    this.alpha = 0;
+                }
+
+                if (this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.alpha = 0;
+                }
+            }
+
+            draw() {
+                if (this.alpha > 0) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(100, 150, 255, ${this.alpha})`;
+                    ctx.fill();
+
+                    // Glow
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(100, 150, 255, ${this.alpha * 0.3})`;
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawWaveInterference() {
+            const wavelength = 40;
+            const k = (2 * Math.PI) / wavelength;
+
+            for (let x = config.barrierX + 20; x < canvas.width; x += 3) {
+                for (let y = 0; y < canvas.height; y += 2) {
+                    const d1 = Math.sqrt(Math.pow(x - config.barrierX, 2) + Math.pow(y - config.slit1Y, 2));
+                    const d2 = Math.sqrt(Math.pow(x - config.barrierX, 2) + Math.pow(y - config.slit2Y, 2));
+
+                    const wave1 = Math.cos(k * d1 - time * 0.1) / (d1 * 0.01);
+                    const wave2 = Math.cos(k * d2 - time * 0.1) / (d2 * 0.01);
+
+                    const amplitude = wave1 + wave2;
+                    const intensity = amplitude * amplitude;
+
+                    const alpha = Math.min(1, intensity * 0.3);
+                    ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
+                    ctx.fillRect(x, y, 3, 2);
+                }
+            }
+        }
+
+        function drawSetup() {
+            // Source
+            ctx.fillStyle = '#00ff88';
+            ctx.beginPath();
+            ctx.arc(config.sourceX, canvas.height / 2, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Barrier with slits
+            ctx.fillStyle = 'rgba(0, 255, 136, 0.3)';
+            ctx.fillRect(config.barrierX, 0, 10, config.slit1Y - config.slitHeight/2);
+            ctx.fillRect(config.barrierX, config.slit1Y + config.slitHeight/2, 10,
+                        config.slit2Y - config.slit1Y - config.slitHeight);
+            ctx.fillRect(config.barrierX, config.slit2Y + config.slitHeight/2, 10,
+                        canvas.height - config.slit2Y - config.slitHeight/2);
+
+            // Detection screen
+            ctx.strokeStyle = 'rgba(0, 255, 136, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(config.screenX, 0);
+            ctx.lineTo(config.screenX, canvas.height);
+            ctx.stroke();
+
+            // Draw detection pattern
+            const maxHits = Math.max(...detectionScreen, 1);
+            for (let y = 0; y < canvas.height; y++) {
+                const intensity = detectionScreen[y] / maxHits;
+                if (intensity > 0) {
+                    ctx.fillStyle = `rgba(255, 100, 100, ${intensity})`;
+                    ctx.fillRect(config.screenX - 20, y, 20, 1);
+                }
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            time++;
+
+            if (mode === 'wave' || mode === 'both') {
+                drawWaveInterference();
+            }
+
+            if (mode === 'particle' || mode === 'both') {
+                // Emit particles
+                if (Math.random() < 0.3) {
+                    particles.push(new QuantumParticle());
+                }
+
+                particles = particles.filter(p => p.alpha > 0);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+            }
+
+            drawSetup();
+
+            requestAnimationFrame(animate);
+        }
+
+        // Event listeners
+        document.getElementById('waveMode').addEventListener('click', function() {
+            mode = 'wave';
+            updateModeButtons();
+            document.getElementById('modeIndicator').textContent = 'MODE: Wave Interference Pattern';
+        });
+
+        document.getElementById('particleMode').addEventListener('click', function() {
+            mode = 'particle';
+            updateModeButtons();
+            document.getElementById('modeIndicator').textContent = 'MODE: Individual Particle Detection';
+        });
+
+        document.getElementById('bothMode').addEventListener('click', function() {
+            mode = 'both';
+            updateModeButtons();
+            document.getElementById('modeIndicator').textContent = 'MODE: Wave-Particle Duality';
+        });
+
+        document.getElementById('reset').addEventListener('click', () => {
+            detectionScreen.fill(0);
+            particles = [];
+            time = 0;
+        });
+
+        function updateModeButtons() {
+            document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            if (mode === 'wave') document.getElementById('waveMode').classList.add('active');
+            if (mode === 'particle') document.getElementById('particleMode').classList.add('active');
+            if (mode === 'both') document.getElementById('bothMode').classList.add('active');
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = Math.min(1200, window.innerWidth - 40);
+            canvas.height = 600;
+        });
+    </script>
+</body>
+</html>

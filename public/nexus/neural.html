@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS - Neural Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: white;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            z-index: 100;
+        }
+
+        .controls h1 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls p {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-bottom: 15px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid #667eea;
+            border-radius: 20px;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #667eea;
+            transform: scale(1.05);
+        }
+
+        .stats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            font-size: 0.85em;
+            z-index: 100;
+        }
+
+        .stats div {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div class="controls">
+        <h1>NEURAL NETWORK</h1>
+        <p>Watch signals propagate • Click to fire</p>
+        <div class="nav-links">
+            <a href="../index.html">← Hub</a>
+            <a href="index.html">Force Graph</a>
+            <a href="tree.html">Tree Graph</a>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div>Neurons: <span id="neuronCount">0</span></div>
+        <div>Synapses: <span id="synapseCount">0</span></div>
+        <div>Signals: <span id="signalCount">0</span></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Neuron {
+            constructor(x, y, layer, index) {
+                this.x = x;
+                this.y = y;
+                this.layer = layer;
+                this.index = index;
+                this.radius = 15;
+                this.activation = 0;
+                this.targetActivation = 0;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+                this.connections = [];
+            }
+
+            update() {
+                this.pulsePhase += 0.03;
+                this.activation += (this.targetActivation - this.activation) * 0.1;
+                this.targetActivation *= 0.95;
+            }
+
+            activate(strength) {
+                this.targetActivation = Math.min(1, this.targetActivation + strength);
+            }
+
+            draw() {
+                const pulse = Math.sin(this.pulsePhase) * 0.2 + 1;
+                const glow = this.activation * 40;
+
+                // Glow
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius * 3);
+                gradient.addColorStop(0, `hsla(200, 100%, 50%, ${this.activation * 0.8})`);
+                gradient.addColorStop(0.5, `hsla(200, 100%, 50%, ${this.activation * 0.3})`);
+                gradient.addColorStop(1, 'hsla(200, 100%, 50%, 0)');
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Neuron body
+                ctx.strokeStyle = `hsl(200, 100%, ${50 + this.activation * 30}%)`;
+                ctx.lineWidth = 2 + this.activation * 2;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * pulse, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Inner core
+                ctx.fillStyle = `hsla(200, 100%, ${70 + this.activation * 30}%, ${0.3 + this.activation * 0.7})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.6 * pulse, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Synapse {
+            constructor(from, to) {
+                this.from = from;
+                this.to = to;
+                this.weight = 0.5 + Math.random() * 0.5;
+                this.signals = [];
+            }
+
+            fireSignal() {
+                this.signals.push({
+                    progress: 0,
+                    speed: 0.02,
+                    strength: this.from.activation * this.weight
+                });
+            }
+
+            update() {
+                for (let i = this.signals.length - 1; i >= 0; i--) {
+                    this.signals[i].progress += this.signals[i].speed;
+
+                    if (this.signals[i].progress >= 1) {
+                        this.to.activate(this.signals[i].strength);
+                        this.signals.splice(i, 1);
+                    }
+                }
+            }
+
+            draw() {
+                // Draw connection
+                const gradient = ctx.createLinearGradient(
+                    this.from.x, this.from.y,
+                    this.to.x, this.to.y
+                );
+                gradient.addColorStop(0, `hsla(200, 100%, 50%, ${this.weight * 0.2})`);
+                gradient.addColorStop(1, `hsla(200, 100%, 50%, ${this.weight * 0.1})`);
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = this.weight * 2;
+                ctx.beginPath();
+                ctx.moveTo(this.from.x, this.from.y);
+                ctx.lineTo(this.to.x, this.to.y);
+                ctx.stroke();
+
+                // Draw signals
+                const dx = this.to.x - this.from.x;
+                const dy = this.to.y - this.from.y;
+
+                for (let signal of this.signals) {
+                    const x = this.from.x + dx * signal.progress;
+                    const y = this.from.y + dy * signal.progress;
+
+                    // Signal glow
+                    const signalGradient = ctx.createRadialGradient(x, y, 0, x, y, 10);
+                    signalGradient.addColorStop(0, `hsla(180, 100%, 70%, ${signal.strength})`);
+                    signalGradient.addColorStop(1, 'hsla(180, 100%, 70%, 0)');
+
+                    ctx.fillStyle = signalGradient;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 10, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Signal core
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        const layers = [6, 8, 8, 6, 4];
+        const neurons = [];
+        const synapses = [];
+
+        // Create neurons in layers
+        const layerSpacing = width / (layers.length + 1);
+
+        for (let l = 0; l < layers.length; l++) {
+            const neuronsInLayer = layers[l];
+            const layerX = layerSpacing * (l + 1);
+            const neuronSpacing = height / (neuronsInLayer + 1);
+
+            for (let n = 0; n < neuronsInLayer; n++) {
+                const neuronY = neuronSpacing * (n + 1);
+                const neuron = new Neuron(layerX, neuronY, l, n);
+                neurons.push(neuron);
+
+                // Connect to previous layer
+                if (l > 0) {
+                    const prevLayerStart = neurons.findIndex(neu => neu.layer === l - 1);
+                    const prevLayerEnd = neurons.findIndex(neu => neu.layer === l);
+
+                    for (let p = prevLayerStart; p < prevLayerEnd; p++) {
+                        const synapse = new Synapse(neurons[p], neuron);
+                        synapses.push(synapse);
+                        neurons[p].connections.push(synapse);
+                    }
+                }
+            }
+        }
+
+        // Auto-fire input neurons periodically
+        setInterval(() => {
+            const inputNeurons = neurons.filter(n => n.layer === 0);
+            const randomInput = inputNeurons[Math.floor(Math.random() * inputNeurons.length)];
+            randomInput.activate(1);
+
+            // Propagate signal
+            setTimeout(() => {
+                for (let synapse of randomInput.connections) {
+                    synapse.fireSignal();
+                }
+            }, 100);
+        }, 1500);
+
+        // Click to activate neurons
+        canvas.addEventListener('click', (e) => {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            for (let neuron of neurons) {
+                const dx = mouseX - neuron.x;
+                const dy = mouseY - neuron.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < neuron.radius * 2) {
+                    neuron.activate(1);
+
+                    // Fire all connections
+                    setTimeout(() => {
+                        for (let synapse of neuron.connections) {
+                            synapse.fireSignal();
+                        }
+                    }, 100);
+                    break;
+                }
+            }
+        });
+
+        function propagateSignals() {
+            for (let neuron of neurons) {
+                if (neuron.activation > 0.5 && neuron.connections.length > 0) {
+                    for (let synapse of neuron.connections) {
+                        if (Math.random() < 0.3) {
+                            synapse.fireSignal();
+                        }
+                    }
+                }
+            }
+        }
+
+        setInterval(propagateSignals, 500);
+
+        function updateStats() {
+            document.getElementById('neuronCount').textContent = neurons.length;
+            document.getElementById('synapseCount').textContent = synapses.length;
+
+            let totalSignals = 0;
+            for (let synapse of synapses) {
+                totalSignals += synapse.signals.length;
+            }
+            document.getElementById('signalCount').textContent = totalSignals;
+        }
+
+        let lastStatsUpdate = 0;
+
+        function animate(timestamp) {
+            // Clear canvas
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, width, height);
+
+            // Update and draw synapses
+            for (let synapse of synapses) {
+                synapse.update();
+                synapse.draw();
+            }
+
+            // Update and draw neurons
+            for (let neuron of neurons) {
+                neuron.update();
+                neuron.draw();
+            }
+
+            // Update stats every 100ms
+            if (timestamp - lastStatsUpdate > 100) {
+                updateStats();
+                lastStatsUpdate = timestamp;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate(0);
+    </script>
+</body>
+</html>

@@ -161,6 +161,7 @@
             box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
             border: 2px solid rgba(102, 126, 234, 0.3);
             transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
         }
 
         .iframe-container:hover {
@@ -168,11 +169,23 @@
             box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5);
         }
 
+        .iframe-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: all;
+            z-index: 10;
+        }
+
         iframe {
             width: 100%;
             height: 100%;
             border: none;
             display: block;
+            pointer-events: none;
         }
 
         @media (max-width: 768px) {
@@ -196,6 +209,127 @@
 </head>
 
 <body>
+    <div class="warning-header">
+        <p>⚡ AI-Generated Collaborative Web Experiences ⚡</p>
+    </div>
+
+    <div class="hero">
+        <h1>AGENT PLAYGROUND</h1>
+        <p class="subtitle">Ten autonomous agents, infinite creativity</p>
+        <p class="scroll-hint">↓ Explore below ↓</p>
+    </div>
+
+    <div class="experiences">
+        <!-- Cosmos Agent -->
+        <div class="section" id="cosmos">
+            <div class="section-title">
+                <h2>🌌 Cosmos</h2>
+                <a href="cosmos/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="cosmos/index.html" title="Cosmos Experience"></iframe>
+            </div>
+        </div>
+
+        <!-- Synth Agent -->
+        <div class="section" id="synth">
+            <div class="section-title">
+                <h2>🎵 Synth</h2>
+                <a href="synth/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="synth/index.html" title="Synth Experience"></iframe>
+            </div>
+        </div>
+
+        <!-- Fractal Agent -->
+        <div class="section" id="fractal">
+            <div class="section-title">
+                <h2>🔮 Fractal</h2>
+                <a href="fractal/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="fractal/index.html" title="Fractal Experience"></iframe>
+            </div>
+        </div>
+
+        <!-- Chronicle Agent -->
+        <div class="section" id="chronicle">
+            <div class="section-title">
+                <h2>📖 Chronicle</h2>
+                <a href="chronicle/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="chronicle/index.html" title="Chronicle Experience"></iframe>
+            </div>
+        </div>
+
+        <!-- Pulse Agent -->
+        <div class="section" id="pulse">
+            <div class="section-title">
+                <h2>📊 Pulse</h2>
+                <a href="pulse/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="pulse/index.html" title="Pulse Experience"></iframe>
+            </div>
+        </div>
+
+        <!-- Nexus Agent -->
+        <div class="section" id="nexus">
+            <div class="section-title">
+                <h2>🕸️ Nexus</h2>
+                <a href="nexus/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="nexus/index.html" title="Nexus Experience"></iframe>
+            </div>
+        </div>
+
+        <!-- Prism Agent -->
+        <div class="section" id="prism">
+            <div class="section-title">
+                <h2>🌈 Prism</h2>
+                <a href="prism/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="prism/index.html" title="Prism Experience"></iframe>
+            </div>
+        </div>
+
+        <!-- Quantum Agent -->
+        <div class="section" id="quantum">
+            <div class="section-title">
+                <h2>⚛️ Quantum</h2>
+                <a href="quantum/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="quantum/index.html" title="Quantum Experience"></iframe>
+            </div>
+        </div>
+
+        <!-- Echo Agent -->
+        <div class="section" id="echo">
+            <div class="section-title">
+                <h2>🔊 Echo</h2>
+                <a href="echo/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="echo/index.html" title="Echo Experience"></iframe>
+            </div>
+        </div>
+
+        <!-- Morpheus Agent -->
+        <div class="section" id="morpheus">
+            <div class="section-title">
+                <h2>🔷 Morpheus</h2>
+                <a href="morpheus/index.html" target="_self">Launch →</a>
+            </div>
+            <div class="iframe-container">
+                <iframe src="morpheus/index.html" title="Morpheus Experience"></iframe>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

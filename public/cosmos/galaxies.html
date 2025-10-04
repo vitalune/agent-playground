@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxies</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Cosmos</a>
+        <a href="planets.html">Planets</a>
+        <a href="stars.html">Stars</a>
+        <a href="blackhole.html">Black Hole</a>
+        <a href="nebula.html">Nebula</a>
+        <a href="../index.html">Hub</a>
+    </nav>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // Spiral galaxy with enhanced arms
+        class Galaxy {
+            constructor(x, y, arms = 5) {
+                this.x = x;
+                this.y = y;
+                this.arms = arms;
+                this.rotation = 0;
+                this.particles = [];
+
+                // Generate spiral particles with better distribution
+                for (let i = 0; i < 6000; i++) {
+                    const armIndex = Math.floor(Math.random() * this.arms);
+                    const armOffset = armIndex * (Math.PI * 2 / this.arms);
+                    const distanceFromArm = (Math.random() - 0.5) * 35; // scatter around arm
+                    const distance = Math.pow(Math.random(), 0.6) * 380 + 20; // more density closer
+                    const armAngle = (distance / 350) * Math.PI * 1.8; // tighter spiral
+
+                    this.particles.push({
+                        baseAngle: armAngle + armOffset,
+                        distanceFromArm: distanceFromArm,
+                        distance: distance,
+                        size: Math.random() * 2.5,
+                        brightness: Math.pow(Math.random(), 2), // more dim stars
+                        color: this.getColor(distance),
+                        twinkle: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+
+            getColor(distance) {
+                if (distance < 80) {
+                    return [255, 240, 180]; // bright yellow core
+                } else if (distance < 180) {
+                    return [255, 200, 150]; // orange-yellow transition
+                } else if (distance < 280) {
+                    return [180, 200, 255]; // blue arms
+                } else {
+                    return [200, 200, 255]; // light blue outer
+                }
+            }
+
+            update() {
+                this.rotation += 0.0005;
+                this.particles.forEach(p => {
+                    p.twinkle += 0.015;
+                });
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                // Draw core glow first - brighter and more defined
+                const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 100);
+                coreGradient.addColorStop(0, 'rgba(255, 250, 200, 0.6)');
+                coreGradient.addColorStop(0.3, 'rgba(255, 230, 160, 0.4)');
+                coreGradient.addColorStop(0.6, 'rgba(255, 200, 120, 0.2)');
+                coreGradient.addColorStop(1, 'rgba(255, 180, 80, 0)');
+                ctx.fillStyle = coreGradient;
+                ctx.fillRect(-120, -120, 240, 240);
+
+                // Draw particles
+                this.particles.forEach(p => {
+                    const x = Math.cos(p.baseAngle) * p.distance + p.distanceFromArm * Math.cos(p.baseAngle + Math.PI/2);
+                    const y = (Math.sin(p.baseAngle) * p.distance + p.distanceFromArm * Math.sin(p.baseAngle + Math.PI/2)) * 0.35;
+
+                    const [r, g, b] = p.color;
+                    const distanceFade = 1 - (p.distance / 400);
+                    const twinkle = 0.5 + Math.sin(p.twinkle) * 0.5;
+                    const opacity = p.brightness * distanceFade * twinkle;
+
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                ctx.restore();
+            }
+        }
+
+        const galaxies = [
+            new Galaxy(width * 0.3, height * 0.4, 4),
+            new Galaxy(width * 0.7, height * 0.6, 5),
+        ];
+
+        // Background stars
+        const bgStars = Array.from({ length: 200 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: Math.random() * 1.5,
+            opacity: Math.random() * 0.5 + 0.3
+        }));
+
+        function animate() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            // Background stars
+            bgStars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            galaxies.forEach(galaxy => {
+                galaxy.update();
+                galaxy.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

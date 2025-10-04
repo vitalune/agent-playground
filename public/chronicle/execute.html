@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Execution - The Last Signal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            background: #000;
+        }
+
+        .boot-line {
+            font-size: 16px;
+            margin: 5px 0;
+            opacity: 0;
+            animation: bootLine 0.3s forwards;
+        }
+
+        @keyframes bootLine {
+            to { opacity: 1; }
+        }
+
+        .vision-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            display: none;
+        }
+
+        .vision-container.active {
+            display: block;
+            animation: visionFade 2s forwards;
+        }
+
+        @keyframes visionFade {
+            to { opacity: 1; }
+        }
+
+        .cosmic-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #1a0033 0%, #000000 100%);
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: float 10s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10%, 90% {
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-100vh) translateX(50px);
+            }
+        }
+
+        .message-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 100;
+            max-width: 900px;
+            padding: 20px;
+        }
+
+        .vision-title {
+            font-size: 64px;
+            color: #a0f;
+            text-shadow: 0 0 40px #a0f;
+            margin-bottom: 40px;
+            animation: pulse 3s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+        }
+
+        .vision-text {
+            font-size: 24px;
+            line-height: 2;
+            color: #fff;
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: textReveal 1s forwards;
+        }
+
+        @keyframes textReveal {
+            to { opacity: 1; }
+        }
+
+        .galaxy {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            height: 400px;
+            margin: -200px 0 0 -200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(160, 0, 255, 0.3), transparent);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(160, 0, 255, 0.3);
+            border-radius: 50%;
+            animation: expand 4s infinite;
+        }
+
+        @keyframes expand {
+            0% {
+                width: 50px;
+                height: 50px;
+                opacity: 1;
+            }
+            100% {
+                width: 600px;
+                height: 600px;
+                opacity: 0;
+            }
+        }
+
+        .choice-panel {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            z-index: 200;
+            opacity: 0;
+            animation: fadeInPanel 2s 5s forwards;
+        }
+
+        @keyframes fadeInPanel {
+            to { opacity: 1; }
+        }
+
+        .choice-btn {
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #a0f;
+            color: #a0f;
+            padding: 25px 45px;
+            font-size: 20px;
+            font-family: 'Courier New', monospace;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choice-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: #a0f;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .choice-btn:hover::before {
+            width: 400%;
+            height: 400%;
+        }
+
+        .choice-btn:hover {
+            color: #000;
+            box-shadow: 0 0 40px #a0f;
+        }
+
+        .choice-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .vision-title {
+                font-size: 36px;
+            }
+
+            .vision-text {
+                font-size: 18px;
+            }
+
+            .choice-panel {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .choice-btn {
+                padding: 20px 30px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="boot-screen" id="bootScreen">
+        <div class="boot-line" style="animation-delay: 0s;">&gt; Executing alien code...</div>
+        <div class="boot-line" style="animation-delay: 0.5s;">&gt; Bypassing security protocols...</div>
+        <div class="boot-line" style="animation-delay: 1s;">&gt; Establishing neural interface...</div>
+        <div class="boot-line" style="animation-delay: 1.5s;">&gt; WARNING: Direct cortical connection</div>
+        <div class="boot-line" style="animation-delay: 2s;">&gt; Downloading consciousness stream...</div>
+        <div class="boot-line" style="animation-delay: 3s;">&gt; TRANSFER COMPLETE</div>
+        <div class="boot-line" style="animation-delay: 4s; color: #a0f; font-size: 24px;">&gt; They want to show you something...</div>
+    </div>
+
+    <div class="vision-container" id="visionContainer">
+        <div class="cosmic-bg"></div>
+        <div class="galaxy"></div>
+
+        <div class="ring" style="animation-delay: 0s;"></div>
+        <div class="ring" style="animation-delay: 1s;"></div>
+        <div class="ring" style="animation-delay: 2s;"></div>
+        <div class="ring" style="animation-delay: 3s;"></div>
+
+        <div id="particles"></div>
+
+        <div class="message-overlay">
+            <div class="vision-title">THE TRUTH</div>
+            <div class="vision-text" style="animation-delay: 1s;">
+                You see it all at once.
+            </div>
+            <div class="vision-text" style="animation-delay: 2s;">
+                Galaxies rising and falling like waves.
+            </div>
+            <div class="vision-text" style="animation-delay: 3s;">
+                Civilizations blooming and dying in cosmic seconds.
+            </div>
+            <div class="vision-text" style="animation-delay: 4s;">
+                They've been watching. Waiting. Guiding.
+            </div>
+            <div class="vision-text" style="animation-delay: 5s;">
+                And now they're offering you a choice:
+            </div>
+        </div>
+
+        <div class="choice-panel">
+            <a href="ascend.html" class="choice-btn">
+                <span>ASCEND</span>
+            </a>
+            <a href="reject.html" class="choice-btn">
+                <span>REJECT</span>
+            </a>
+            <a href="index.html" class="choice-btn">
+                <span>RESTART</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Hide boot screen and show vision after delay
+        setTimeout(() => {
+            document.getElementById('bootScreen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('bootScreen').style.display = 'none';
+                document.getElementById('visionContainer').classList.add('active');
+            }, 1000);
+        }, 5000);
+
+        // Create particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 10 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            particlesContainer.appendChild(particle);
+        }
+    </script>
+</body>
+</html>

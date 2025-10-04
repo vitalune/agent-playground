@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Analysis - The Last Signal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0af;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .nav-links {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-link {
+            color: #0af;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid #0af;
+            background: rgba(0, 0, 0, 0.8);
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #0af;
+            color: #000;
+            box-shadow: 0 0 20px #0af;
+        }
+
+        .analysis-container {
+            max-width: 1400px;
+            margin: 100px auto 50px;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 50px;
+            color: #0af;
+            text-shadow: 0 0 20px #0af;
+            letter-spacing: 6px;
+        }
+
+        .decoder-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .decoder-panel {
+            background: rgba(0, 50, 80, 0.3);
+            border: 2px solid #0af;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 170, 255, 0.2);
+        }
+
+        .panel-title {
+            font-size: 24px;
+            color: #0ff;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #0af;
+            padding-bottom: 10px;
+        }
+
+        .waveform {
+            width: 100%;
+            height: 150px;
+            background: #000;
+            border: 1px solid #0af;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wave {
+            position: absolute;
+            bottom: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #0af;
+            animation: wave 2s linear infinite;
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(0) scaleY(1); }
+            100% { transform: translateX(-100%) scaleY(1); }
+        }
+
+        .data-stream {
+            font-size: 12px;
+            line-height: 1.8;
+            color: #0af;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #000;
+            padding: 15px;
+            border: 1px solid #0af;
+        }
+
+        .data-line {
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .pattern-matrix {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 3px;
+            margin: 20px 0;
+        }
+
+        .matrix-cell {
+            width: 100%;
+            padding-bottom: 100%;
+            background: #000;
+            border: 1px solid #0af;
+            position: relative;
+            animation: cellPulse 3s infinite;
+        }
+
+        .matrix-cell.active {
+            background: #0af;
+            box-shadow: 0 0 10px #0af;
+        }
+
+        @keyframes cellPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .revelation {
+            background: rgba(255, 100, 0, 0.2);
+            border: 3px solid #fa0;
+            padding: 40px;
+            margin: 50px 0;
+            text-align: center;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 170, 0, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 170, 0, 0.6); }
+        }
+
+        .revelation-text {
+            font-size: 28px;
+            color: #fa0;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        .decoded-message {
+            font-size: 48px;
+            color: #fff;
+            text-shadow: 0 0 20px #fa0;
+            margin: 30px 0;
+            letter-spacing: 4px;
+        }
+
+        .next-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 50px;
+        }
+
+        .step-card {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0af;
+            padding: 35px;
+            text-decoration: none;
+            color: #0af;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 170, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .step-card:hover::after {
+            left: 100%;
+        }
+
+        .step-card:hover {
+            border-color: #0ff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            transform: translateY(-5px);
+        }
+
+        .step-title {
+            font-size: 22px;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-desc {
+            font-size: 15px;
+            opacity: 0.8;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .decoder-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                font-size: 32px;
+            }
+
+            .decoded-message {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+
+    <div class="nav-links">
+        <a href="../index.html" class="nav-link">← HUB</a>
+        <a href="index.html" class="nav-link">← START</a>
+    </div>
+
+    <div class="analysis-container">
+        <div class="header">SIGNAL ANALYSIS IN PROGRESS</div>
+
+        <div class="decoder-grid">
+            <div class="decoder-panel">
+                <div class="panel-title">Frequency Analysis</div>
+                <div class="waveform">
+                    <div class="wave"></div>
+                    <div class="wave" style="animation-delay: 0.5s; opacity: 0.6;"></div>
+                    <div class="wave" style="animation-delay: 1s; opacity: 0.3;"></div>
+                </div>
+                <div class="data-stream">
+                    <div class="data-line" style="animation-delay: 0s;">FREQ: 1420.405 MHz (Hydrogen Line)</div>
+                    <div class="data-line" style="animation-delay: 0.2s;">MODULATION: Complex Phase-Shift</div>
+                    <div class="data-line" style="animation-delay: 0.4s;">BANDWIDTH: 10 kHz</div>
+                    <div class="data-line" style="animation-delay: 0.6s;">S/N RATIO: 47.2 dB</div>
+                    <div class="data-line" style="animation-delay: 0.8s;">DOPPLER SHIFT: Approaching</div>
+                </div>
+            </div>
+
+            <div class="decoder-panel">
+                <div class="panel-title">Pattern Recognition</div>
+                <div class="pattern-matrix" id="matrix"></div>
+                <div class="data-stream">
+                    <div class="data-line" style="animation-delay: 0s;">Detecting repeating sequences...</div>
+                    <div class="data-line" style="animation-delay: 0.3s;">Prime number series identified</div>
+                    <div class="data-line" style="animation-delay: 0.6s;">Mathematical constants embedded</div>
+                    <div class="data-line" style="animation-delay: 0.9s;">Image data detected: 256x256 px</div>
+                    <div class="data-line" style="animation-delay: 1.2s;">WARNING: Self-modifying code structure</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="revelation">
+            <div class="revelation-text">
+                The signal isn't a greeting.<br>
+                It's an instruction set.<br>
+                And it's downloading directly into your station's systems.
+            </div>
+            <div class="decoded-message">THEY'RE ALREADY HERE</div>
+        </div>
+
+        <div class="next-steps">
+            <a href="shutdown.html" class="step-card">
+                <div class="step-title">EMERGENCY SHUTDOWN</div>
+                <div class="step-desc">Disconnect all systems before download completes. Isolate the station.</div>
+            </a>
+
+            <a href="contain.html" class="step-card">
+                <div class="step-title">CONTAINMENT PROTOCOL</div>
+                <div class="step-desc">Let it download into isolated sandbox. Study what they're sending.</div>
+            </a>
+
+            <a href="execute.html" class="step-card">
+                <div class="step-title">EXECUTE CODE</div>
+                <div class="step-desc">Run the program. See what they want to show you. Risky but enlightening.</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Create starfield
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 3 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
+
+        // Create pattern matrix
+        const matrix = document.getElementById('matrix');
+        for (let i = 0; i < 256; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'matrix-cell';
+
+            if (Math.random() > 0.7) {
+                setTimeout(() => {
+                    cell.classList.add('active');
+                }, Math.random() * 3000);
+            }
+
+            cell.style.animationDelay = Math.random() * 3 + 's';
+            matrix.appendChild(cell);
+        }
+
+        // Random matrix activation
+        setInterval(() => {
+            const cells = document.querySelectorAll('.matrix-cell');
+            const randomCell = cells[Math.floor(Math.random() * cells.length)];
+            randomCell.classList.toggle('active');
+        }, 200);
+    </script>
+</body>
+</html>

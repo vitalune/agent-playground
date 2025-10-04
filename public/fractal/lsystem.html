@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L-System Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.8); }
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #0f0;
+            animation: glow 2s ease-in-out infinite;
+            z-index: 100;
+        }
+
+        .controls h1 {
+            color: #0f0;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        .control-group {
+            margin: 10px 0;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #0f0;
+            font-size: 0.9em;
+        }
+
+        .control-group input[type="range"] {
+            width: 180px;
+        }
+
+        .control-group button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .control-group button:hover {
+            background: #fff;
+            box-shadow: 0 0 15px #0f0;
+        }
+
+        .presets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .presets button {
+            font-size: 0.8em;
+            padding: 6px 10px;
+        }
+
+        .nav-links {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .nav-links a {
+            background: rgba(0, 0, 0, 0.95);
+            color: #0ff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: 2px solid #0ff;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-shadow: 0 0 5px #0ff;
+        }
+
+        .nav-links a:hover {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 15px #0ff;
+            text-shadow: none;
+        }
+
+        .info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ff0;
+            max-width: 280px;
+            z-index: 100;
+        }
+
+        .info p {
+            color: #ff0;
+            font-size: 0.85em;
+            margin: 5px 0;
+        }
+
+        .info .system-name {
+            color: #0f0;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="lsystemCanvas"></canvas>
+
+        <div class="controls">
+            <h1>L-SYSTEM GENERATOR</h1>
+            <div class="control-group">
+                <label>Iterations: <span id="iterValue">4</span></label>
+                <input type="range" id="iterations" min="1" max="7" value="4">
+            </div>
+            <div class="control-group">
+                <label>Angle: <span id="angleValue">25</span>°</label>
+                <input type="range" id="angle" min="10" max="90" value="25">
+            </div>
+            <div class="control-group">
+                <label>Growth: <span id="growthValue">0.7</span></label>
+                <input type="range" id="growth" min="0.5" max="0.9" step="0.05" value="0.7">
+            </div>
+            <div class="control-group">
+                <button id="animateBtn">Grow Animation</button>
+            </div>
+            <div class="presets">
+                <button onclick="loadPreset('tree')">Tree</button>
+                <button onclick="loadPreset('bush')">Bush</button>
+                <button onclick="loadPreset('fern')">Fern</button>
+                <button onclick="loadPreset('spiral')">Spiral</button>
+            </div>
+        </div>
+
+        <div class="info">
+            <p class="system-name" id="systemName">Fractal Tree</p>
+            <p>L-systems use recursive rules to generate organic patterns</p>
+            <p>Try different presets and parameters!</p>
+        </div>
+
+        <div class="nav-links">
+            <a href="index.html">Mandelbrot</a>
+            <a href="julia.html">Julia Sets</a>
+            <a href="../index.html">Hub</a>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('lsystemCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let iterations = 4;
+        let angle = 25;
+        let growthFactor = 0.7;
+        let isAnimating = false;
+        let currentIteration = 0;
+
+        const systems = {
+            tree: {
+                axiom: 'F',
+                rules: { 'F': 'FF+[+F-F-F]-[-F+F+F]' },
+                angle: 25,
+                name: 'Fractal Tree'
+            },
+            bush: {
+                axiom: 'F',
+                rules: { 'F': 'F[+F]F[-F]F' },
+                angle: 20,
+                name: 'Bushy Tree'
+            },
+            fern: {
+                axiom: 'X',
+                rules: {
+                    'X': 'F+[[X]-X]-F[-FX]+X',
+                    'F': 'FF'
+                },
+                angle: 25,
+                name: 'Barnsley Fern'
+            },
+            spiral: {
+                axiom: 'F',
+                rules: { 'F': 'F+F--F+F' },
+                angle: 60,
+                name: 'Koch Curve'
+            }
+        };
+
+        let currentSystem = systems.tree;
+
+        const iterSlider = document.getElementById('iterations');
+        const angleSlider = document.getElementById('angle');
+        const growthSlider = document.getElementById('growth');
+        const animateBtn = document.getElementById('animateBtn');
+
+        iterSlider.addEventListener('input', (e) => {
+            iterations = parseInt(e.target.value);
+            document.getElementById('iterValue').textContent = iterations;
+            render();
+        });
+
+        angleSlider.addEventListener('input', (e) => {
+            angle = parseInt(e.target.value);
+            document.getElementById('angleValue').textContent = angle;
+            render();
+        });
+
+        growthSlider.addEventListener('input', (e) => {
+            growthFactor = parseFloat(e.target.value);
+            document.getElementById('growthValue').textContent = growthFactor.toFixed(2);
+            render();
+        });
+
+        animateBtn.addEventListener('click', () => {
+            isAnimating = !isAnimating;
+            animateBtn.textContent = isAnimating ? 'Stop Animation' : 'Grow Animation';
+            if (isAnimating) {
+                currentIteration = 1;
+                animate();
+            }
+        });
+
+        function loadPreset(systemName) {
+            currentSystem = systems[systemName];
+            angle = currentSystem.angle;
+            angleSlider.value = angle;
+            document.getElementById('angleValue').textContent = angle;
+            document.getElementById('systemName').textContent = currentSystem.name;
+            render();
+        }
+
+        window.loadPreset = loadPreset;
+
+        function generateLSystem(axiom, rules, iterations) {
+            let current = axiom;
+            for (let i = 0; i < iterations; i++) {
+                let next = '';
+                for (let char of current) {
+                    next += rules[char] || char;
+                }
+                current = next;
+            }
+            return current;
+        }
+
+        function drawLSystem(instructions, startX, startY, length, angle) {
+            ctx.save();
+            ctx.translate(startX, startY);
+            ctx.rotate(-Math.PI / 2);
+
+            const stack = [];
+            let currentLength = length;
+            let hue = 120;
+
+            for (let char of instructions) {
+                switch (char) {
+                    case 'F':
+                        ctx.strokeStyle = `hsl(${hue}, 100%, 50%)`;
+                        ctx.lineWidth = Math.max(1, currentLength / 10);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(currentLength, 0);
+                        ctx.stroke();
+                        ctx.translate(currentLength, 0);
+                        hue = (hue + 0.5) % 360;
+                        break;
+                    case '+':
+                        ctx.rotate(angle * Math.PI / 180);
+                        break;
+                    case '-':
+                        ctx.rotate(-angle * Math.PI / 180);
+                        break;
+                    case '[':
+                        stack.push({
+                            x: ctx.getTransform().e,
+                            y: ctx.getTransform().f,
+                            angle: Math.atan2(ctx.getTransform().b, ctx.getTransform().a),
+                            length: currentLength
+                        });
+                        ctx.save();
+                        currentLength *= growthFactor;
+                        break;
+                    case ']':
+                        ctx.restore();
+                        const state = stack.pop();
+                        currentLength = state.length;
+                        break;
+                }
+            }
+
+            ctx.restore();
+        }
+
+        function render() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const iters = isAnimating ? currentIteration : iterations;
+            const instructions = generateLSystem(
+                currentSystem.axiom,
+                currentSystem.rules,
+                iters
+            );
+
+            const startX = canvas.width / 2;
+            const startY = canvas.height - 50;
+            const length = Math.min(canvas.width, canvas.height) / (10 + iters * 2);
+
+            drawLSystem(instructions, startX, startY, length, angle);
+        }
+
+        function animate() {
+            if (!isAnimating) return;
+
+            render();
+            currentIteration += 0.1;
+
+            if (currentIteration >= iterations) {
+                currentIteration = 1;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            render();
+        });
+
+        document.getElementById('systemName').textContent = currentSystem.name;
+        render();
+    </script>
+</body>
+</html>

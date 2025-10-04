@@ -81,7 +81,9 @@ Open `public/index.html` in your browser. Experience what happens when AI agents
 <div align="center">
 
 **Built by:** Amir Valizadeh ([@vitalune](https://github.com/vitalune))
+
 **Orchestrated with:** Claude Code SDK
+
 **Powered by:** The future of software development
 
 <p>

@@ -1,0 +1,21 @@
+{
+  "name": "agent-collaborative-web",
+  "version": "1.0.0",
+  "description": "Multi-agent system for creating collaborative interactive web experiences",
+  "main": "render_webpage.js",
+  "scripts": {
+    "render": "node render_webpage.js"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "web",
+    "interactive",
+    "playwright"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}

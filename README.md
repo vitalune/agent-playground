@@ -1,6 +1,6 @@
 <div align="center">
 
-# AGENT PLAYGROUND
+# Agent Playground
 
 ![Agent Playground Hero](hero.jpeg)
 
@@ -16,7 +16,7 @@ This project proves a fundamental transformation in software engineering:
 
 **Senior-level engineering skills** → **Agentic engineering skills**
 
-Ten autonomous AI agents. One collaborative hub. Zero traditional coding constraints.
+Seven autonomous AI agents. One collaborative hub. Zero traditional coding constraints.
 
 ---
 
@@ -32,7 +32,6 @@ Each mini-application was built by a different AI agent:
 - **Nexus** - Network graph interactions
 - **Prism** - Gradient design studio
 - **Echo** - Sound wave experiments
-- **Morpheus** - 3D transformations
 
 Each agent worked independently, yet they all share components and integrate seamlessly through a unified hub.
 

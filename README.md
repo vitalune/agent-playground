@@ -74,7 +74,7 @@ You need **vision, prompt engineering, and orchestration skills.**
 
 ## <img src="https://img.shields.io/badge/Try-It-4FACFE?style=for-the-badge" alt="Try It"/>
 
-Open ![the live website](https://vitalune.github.io/agent-playground/) in your browser. Experience what happens when AI agents are given creative freedom, technical constraints, and a shared mission.
+Open [the live website](https://vitalune.github.io/agent-playground/) in your browser. Experience what happens when AI agents are given creative freedom, technical constraints, and a shared mission.
 
 ---
 
